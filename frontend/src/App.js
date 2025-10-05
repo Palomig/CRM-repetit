@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, GraduationCap, Calendar, DollarSign, CheckSquare, Menu, X, Plus, Search, Phone, MessageCircle } from 'lucide-react';
 
 // API Configuration
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://cw95865.tmweb.ru/api';  // Измените после деплоя
 
 // Mock Data для демонстрации
 const mockDashboardData = {

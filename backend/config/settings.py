@@ -8,7 +8,7 @@ SECRET_KEY = 'your-secret-key-here-change-in-production'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['cw95865.tmweb.ru', 'www.cw95865.tmweb.ru', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -125,7 +125,11 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Change in production
+CORS_ALLOWED_ORIGINS = [
+    'https://cw95865.tmweb.ru',
+    'http://cw95865.tmweb.ru',
+    'http://localhost:3000',  # для разработки
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # Celery Configuration (for background tasks)
