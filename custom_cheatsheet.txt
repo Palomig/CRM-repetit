@@ -1,0 +1,580 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║       📋 ШПАРГАЛКА КОМАНД ДЛЯ ВАШЕГО TIMEWEB                        ║
+║       Домен: https://cw95865.tmweb.ru/                              ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔐 ПОДКЛЮЧЕНИЕ
+═══════════════════════════════════════════════════════════════════════
+
+SSH:
+ssh cw95865@cw95865.tmweb.ru
+
+
+═══════════════════════════════════════════════════════════════════════
+  📁 ПУТИ
+═══════════════════════════════════════════════════════════════════════
+
+Корневая папка:  /home/c/cw95865
+Проект Django:   /home/c/cw95865/public_html/tutor_crm
+Виртуальное окр: /home/c/cw95865/venv
+WSGI файл:       /home/c/cw95865/public_html/wsgi.py
+Логи:            /home/c/cw95865/logs/
+
+
+═══════════════════════════════════════════════════════════════════════
+  🚀 БЫСТРЫЙ СТАРТ
+═══════════════════════════════════════════════════════════════════════
+
+# 1. Подключиться
+ssh cw95865@cw95865.tmweb.ru
+
+# 2. Перейти в проект и активировать venv
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+
+# 3. Применить миграции
+python manage.py migrate
+
+# 4. Собрать статику
+python manage.py collectstatic --noinput
+
+# 5. Создать суперпользователя
+python manage.py createsuperuser
+
+# 6. Перезапустить
+touch /home/c/cw95865/public_html/wsgi.py
+
+
+═══════════════════════════════════════════════════════════════════════
+  🐍 АКТИВАЦИЯ ВИРТУАЛЬНОГО ОКРУЖЕНИЯ
+═══════════════════════════════════════════════════════════════════════
+
+source /home/c/cw95865/venv/bin/activate
+
+# Или короче (если вы в домашней папке)
+source ~/venv/bin/activate
+
+
+═══════════════════════════════════════════════════════════════════════
+  📊 DJANGO КОМАНДЫ
+═══════════════════════════════════════════════════════════════════════
+
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+
+# Миграции
+python manage.py makemigrations
+python manage.py migrate
+python manage.py showmigrations
+
+# Статика
+python manage.py collectstatic --noinput
+
+# Суперпользователь
+python manage.py createsuperuser
+python manage.py changepassword admin
+
+# Проверка
+python manage.py check
+python manage.py check --deploy
+
+# Shell
+python manage.py shell
+
+# База данных
+python manage.py dbshell
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔄 ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ
+═══════════════════════════════════════════════════════════════════════
+
+touch /home/c/cw95865/public_html/wsgi.py
+
+
+═══════════════════════════════════════════════════════════════════════
+  📝 ЛОГИ
+═══════════════════════════════════════════════════════════════════════
+
+# Ошибки Apache
+tail -f /home/c/cw95865/logs/error.log
+tail -n 100 /home/c/cw95865/logs/error.log
+
+# Доступ
+tail -f /home/c/cw95865/logs/access.log
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔐 ПРАВА ДОСТУПА
+═══════════════════════════════════════════════════════════════════════
+
+# WSGI файл (должен быть исполняемым)
+chmod 755 /home/c/cw95865/public_html/wsgi.py
+
+# .htaccess
+chmod 644 /home/c/cw95865/public_html/.htaccess
+
+# Все файлы проекта
+find /home/c/cw95865/public_html/tutor_crm -type f -exec chmod 644 {} \;
+find /home/c/cw95865/public_html/tutor_crm -type d -exec chmod 755 {} \;
+
+
+═══════════════════════════════════════════════════════════════════════
+  ⚙️  НАСТРОЙКА .env
+═══════════════════════════════════════════════════════════════════════
+
+nano /home/c/cw95865/public_html/tutor_crm/.env
+
+СОДЕРЖИМОЕ:
+
+DEBUG=False
+SECRET_KEY=сгенерируйте-новый-ключ-50-символов
+ALLOWED_HOSTS=cw95865.tmweb.ru
+
+DB_NAME=cw95865_rmtutori
+DB_USER=cw95865_rmtutori
+DB_PASSWORD=123456789
+DB_HOST=localhost
+DB_PORT=3306
+
+ГЕНЕРАЦИЯ SECRET_KEY:
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+
+═══════════════════════════════════════════════════════════════════════
+  💾 BACKUP БАЗЫ ДАННЫХ
+═══════════════════════════════════════════════════════════════════════
+
+# Создать backup
+mysqldump -u cw95865_rmtutori -p cw95865_rmtutori > backup_$(date +%Y%m%d).sql
+# Пароль: 123456789
+
+# Создать backup с сжатием
+mysqldump -u cw95865_rmtutori -p cw95865_rmtutori | gzip > backup_$(date +%Y%m%d).sql.gz
+
+# Восстановить
+mysql -u cw95865_rmtutori -p cw95865_rmtutori < backup.sql
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔍 ДИАГНОСТИКА
+═══════════════════════════════════════════════════════════════════════
+
+# Проверить структуру
+ls -la /home/c/cw95865/public_html/
+
+# Проверить wsgi.py
+cat /home/c/cw95865/public_html/wsgi.py
+ls -la /home/c/cw95865/public_html/wsgi.py
+
+# Проверить .env
+cat /home/c/cw95865/public_html/tutor_crm/.env
+
+# Проверить подключение к БД
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+python manage.py dbshell
+
+# Размер проекта
+du -sh /home/c/cw95865/public_html/tutor_crm
+
+# Свободное место
+df -h /home/c/cw95865
+
+
+═══════════════════════════════════════════════════════════════════════
+  🐛 РЕШЕНИЕ ПРОБЛЕМ
+═══════════════════════════════════════════════════════════════════════
+
+ОШИБКА 500:
+-----------
+1. tail -n 50 /home/c/cw95865/logs/error.log
+2. cat /home/c/cw95865/public_html/wsgi.py
+3. cat /home/c/cw95865/public_html/tutor_crm/.env
+4. chmod 755 /home/c/cw95865/public_html/wsgi.py
+5. touch /home/c/cw95865/public_html/wsgi.py
+
+
+СТАТИКА НЕ ЗАГРУЖАЕТСЯ:
+-----------------------
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+python manage.py collectstatic --noinput
+touch /home/c/cw95865/public_html/wsgi.py
+
+
+БАЗА НЕ ПОДКЛЮЧАЕТСЯ:
+---------------------
+cat /home/c/cw95865/public_html/tutor_crm/.env
+python manage.py dbshell
+
+
+МОДУЛЬ НЕ НАЙДЕН:
+-----------------
+source ~/venv/bin/activate
+pip install -r requirements.txt --force-reinstall
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔄 ОБНОВЛЕНИЕ ПРОЕКТА
+═══════════════════════════════════════════════════════════════════════
+
+ssh cw95865@cw95865.tmweb.ru
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+
+# Загрузите новые файлы через FTP
+
+python manage.py migrate
+python manage.py collectstatic --noinput
+touch /home/c/cw95865/public_html/wsgi.py
+
+
+═══════════════════════════════════════════════════════════════════════
+  📦 УСТАНОВКА ЗАВИСИМОСТЕЙ
+═══════════════════════════════════════════════════════════════════════
+
+source ~/venv/bin/activate
+cd /home/c/cw95865/public_html/tutor_crm
+
+# Установить
+pip install -r requirements.txt
+
+# Обновить все
+pip install -r requirements.txt --upgrade
+
+# Переустановить
+pip install -r requirements.txt --force-reinstall
+
+
+═══════════════════════════════════════════════════════════════════════
+  🌐 ССЫЛКИ
+═══════════════════════════════════════════════════════════════════════
+
+Сайт:      https://cw95865.tmweb.ru/
+Админка:   https://cw95865.tmweb.ru/admin/
+Ученики:   https://cw95865.tmweb.ru/students/
+Расписание: https://cw95865.tmweb.ru/schedule/
+Финансы:   https://cw95865.tmweb.ru/finance/
+Задачи:    https://cw95865.tmweb.ru/tasks/
+
+
+═══════════════════════════════════════════════════════════════════════
+  ✅ БЫСТРАЯ ПРОВЕРКА
+═══════════════════════════════════════════════════════════════════════
+
+# Подключение
+ssh cw95865@cw95865.tmweb.ru
+
+# Файлы на месте?
+ls -la /home/c/cw95865/public_html/tutor_crm/
+
+# .env существует?
+cat /home/c/cw95865/public_html/tutor_crm/.env
+
+# Права правильные?
+ls -la /home/c/cw95865/public_html/wsgi.py
+# Должно быть: -rwxr-xr-x (755)
+
+# Venv работает?
+source ~/venv/bin/activate
+python --version
+
+# Django работает?
+cd /home/c/cw95865/public_html/tutor_crm
+python manage.py check
+
+# БД подключается?
+python manage.py dbshell
+
+# Логи чистые?
+tail -n 20 /home/c/cw95865/logs/error.log
+
+
+═══════════════════════════════════════════════════════════════════════
+  💡 ПОЛЕЗНЫЕ АЛИАСЫ (ДОБАВИТЬ В ~/.bashrc)
+═══════════════════════════════════════════════════════════════════════
+
+alias cdcrm='cd /home/c/cw95865/public_html/tutor_crm'
+alias venv='source /home/c/cw95865/venv/bin/activate'
+alias logs='tail -f /home/c/cw95865/logs/error.log'
+alias restart='touch /home/c/cw95865/public_html/wsgi.py'
+
+После добавления выполните:
+source ~/.bashrc
+
+Теперь можно использовать:
+cdcrm    # Перейти в проект
+venv     # Активировать окружение
+logs     # Смотреть логи
+restart  # Перезапустить
+
+
+═══════════════════════════════════════════════════════════════════════
+  📋 ЧЕКЛИСТ
+═══════════════════════════════════════════════════════════════════════
+
+[ ] SSH подключение работает
+[ ] Проект в /home/c/cw95865/public_html/tutor_crm/
+[ ] Venv в ~/venv
+[ ] .env создан и настроен
+[ ] SECRET_KEY сгенерирован
+[ ] wsgi.py имеет права 755
+[ ] Миграции применены
+[ ] Статика собрана
+[ ] Суперпользователь создан
+[ ] https://cw95865.tmweb.ru/ открывается
+[ ] Админка работает
+[ ] Можно войти и добавить данные
+
+
+═══════════════════════════════════════════════════════════════════════
+  🎯 ТИПИЧНЫЙ РАБОЧИЙ ПРОЦЕСС
+═══════════════════════════════════════════════════════════════════════
+
+# 1. Подключиться
+ssh cw95865@cw95865.tmweb.ru
+
+# 2. Перейти в проект
+cd /home/c/cw95865/public_html/tutor_crm
+
+# 3. Активировать окружение
+source ~/venv/bin/activate
+
+# 4. Внести изменения (загрузить файлы через FTP)
+
+# 5. Применить изменения
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# 6. Перезапустить
+touch /home/c/cw95865/public_html/wsgi.py
+
+# 7. Проверить логи
+tail -f /home/c/cw95865/logs/error.log
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔧 УСТАНОВКА С НУЛЯ (полная последовательность)
+═══════════════════════════════════════════════════════════════════════
+
+# 1. Подключиться
+ssh cw95865@cw95865.tmweb.ru
+
+# 2. Создать venv (если еще нет)
+cd /home/c/cw95865
+wget https://bootstrap.pypa.io/virtualenv/3.6/virtualenv.pyz
+python3 virtualenv.pyz venv
+
+# 3. Активировать
+source venv/bin/activate
+
+# 4. Установить Django и зависимости
+pip install Django==3.2.25 django-environ mysqlclient djangorestframework
+
+# 5. Загрузить проект через FTP в /home/c/cw95865/public_html/tutor_crm/
+
+# 6. Создать .env
+cd /home/c/cw95865/public_html/tutor_crm
+nano .env
+
+# Вставить:
+DEBUG=False
+SECRET_KEY=$(python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+ALLOWED_HOSTS=cw95865.tmweb.ru
+DB_NAME=cw95865_rmtutori
+DB_USER=cw95865_rmtutori
+DB_PASSWORD=123456789
+DB_HOST=localhost
+DB_PORT=3306
+
+# 7. Установить права
+chmod 755 /home/c/cw95865/public_html/wsgi.py
+chmod 644 /home/c/cw95865/public_html/.htaccess
+
+# 8. Применить миграции
+python manage.py makemigrations
+python manage.py migrate
+
+# 9. Собрать статику
+python manage.py collectstatic --noinput
+
+# 10. Создать суперпользователя
+python manage.py createsuperuser
+
+# 11. Перезапустить
+touch /home/c/cw95865/public_html/wsgi.py
+
+# 12. Проверить
+curl -I https://cw95865.tmweb.ru/
+
+
+═══════════════════════════════════════════════════════════════════════
+  📞 БАЗА ДАННЫХ - КОМАНДЫ
+═══════════════════════════════════════════════════════════════════════
+
+# Подключиться к MySQL
+mysql -u cw95865_rmtutori -p
+# Пароль: 123456789
+
+# Через Django
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+python manage.py dbshell
+
+# Показать таблицы
+mysql -u cw95865_rmtutori -p cw95865_rmtutori -e "SHOW TABLES;"
+
+# Количество записей
+mysql -u cw95865_rmtutori -p cw95865_rmtutori -e "SELECT COUNT(*) FROM students_student;"
+
+# Размер БД
+mysql -u cw95865_rmtutori -p -e "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' FROM information_schema.TABLES WHERE table_schema = 'cw95865_rmtutori';"
+
+
+═══════════════════════════════════════════════════════════════════════
+  🎨 ПЕРВОЕ ИСПОЛЬЗОВАНИЕ
+═══════════════════════════════════════════════════════════════════════
+
+1. Откройте админку:
+   https://cw95865.tmweb.ru/admin/
+
+2. Войдите с данными суперпользователя
+
+3. Добавьте данные по порядку:
+   - Кабинеты (Rooms)
+   - Преподаватели (Teachers)
+   - Родители (Parents)
+   - Ученики (Students)
+   - Группы (Groups)
+   - Уроки (Lessons)
+
+4. Используйте интерфейс:
+   - Dashboard: https://cw95865.tmweb.ru/
+   - Ученики: https://cw95865.tmweb.ru/students/
+   - Расписание: https://cw95865.tmweb.ru/schedule/
+
+
+═══════════════════════════════════════════════════════════════════════
+  🔒 БЕЗОПАСНОСТЬ
+═══════════════════════════════════════════════════════════════════════
+
+# Проверить настройки безопасности
+cd /home/c/cw95865/public_html/tutor_crm
+source ~/venv/bin/activate
+python manage.py check --deploy
+
+# Убедиться что DEBUG=False
+grep DEBUG /home/c/cw95865/public_html/tutor_crm/.env
+
+# Проверить SECRET_KEY установлен
+grep SECRET_KEY /home/c/cw95865/public_html/tutor_crm/.env
+
+# Права на .env (должен быть недоступен извне)
+chmod 600 /home/c/cw95865/public_html/tutor_crm/.env
+
+
+═══════════════════════════════════════════════════════════════════════
+  📊 МОНИТОРИНГ
+═══════════════════════════════════════════════════════════════════════
+
+# Проверить работает ли сайт
+curl -I https://cw95865.tmweb.ru/
+
+# Смотреть логи в реальном времени
+tail -f /home/c/cw95865/logs/error.log
+
+# Последние ошибки
+tail -n 50 /home/c/cw95865/logs/error.log | grep -i error
+
+# Размер логов
+du -sh /home/c/cw95865/logs/
+
+# Очистить старые логи (осторожно!)
+> /home/c/cw95865/logs/error.log
+
+
+═══════════════════════════════════════════════════════════════════════
+  🚨 ЭКСТРЕННОЕ ВОССТАНОВЛЕНИЕ
+═══════════════════════════════════════════════════════════════════════
+
+ЕСЛИ ВСЁ СЛОМАЛОСЬ:
+
+1. Проверить логи:
+   tail -n 100 /home/c/cw95865/logs/error.log
+
+2. Проверить wsgi.py:
+   cat /home/c/cw95865/public_html/wsgi.py
+
+3. Проверить .env:
+   cat /home/c/cw95865/public_html/tutor_crm/.env
+
+4. Восстановить права:
+   chmod 755 /home/c/cw95865/public_html/wsgi.py
+   chmod 644 /home/c/cw95865/public_html/.htaccess
+
+5. Переустановить зависимости:
+   source ~/venv/bin/activate
+   cd /home/c/cw95865/public_html/tutor_crm
+   pip install -r requirements.txt --force-reinstall
+
+6. Проверить БД:
+   python manage.py dbshell
+
+7. Перезапустить:
+   touch /home/c/cw95865/public_html/wsgi.py
+
+8. Если ничего не помогает - восстановить из backup
+
+
+═══════════════════════════════════════════════════════════════════════
+  💾 РЕГУЛЯРНОЕ ОБСЛУЖИВАНИЕ
+═══════════════════════════════════════════════════════════════════════
+
+ЕЖЕНЕДЕЛЬНО:
+
+# Backup БД
+mysqldump -u cw95865_rmtutori -p cw95865_rmtutori > backup_$(date +%Y%m%d).sql
+
+# Проверить размер БД
+mysql -u cw95865_rmtutori -p -e "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' FROM information_schema.TABLES WHERE table_schema = 'cw95865_rmtutori';"
+
+# Проверить место на диске
+df -h /home/c/cw95865
+
+# Проверить логи на ошибки
+tail -n 100 /home/c/cw95865/logs/error.log | grep -i error
+
+
+═══════════════════════════════════════════════════════════════════════
+  📝 ЗАМЕТКИ
+═══════════════════════════════════════════════════════════════════════
+
+• Всегда делайте backup БД перед обновлением!
+• После изменения кода всегда делайте collectstatic
+• После изменения моделей всегда делайте migrate
+• Всегда перезапускайте wsgi после изменений
+• Следите за размером логов
+• Регулярно проверяйте ошибки в логах
+• Используйте DEBUG=False в production!
+• Никогда не коммитьте .env в Git!
+
+
+═══════════════════════════════════════════════════════════════════════
+  ✅ ГОТОВО!
+═══════════════════════════════════════════════════════════════════════
+
+Сохраните этот файл для быстрого доступа к командам!
+
+Ваша CRM система: https://cw95865.tmweb.ru/
+
+Удачи! 🚀
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                      КОНЕЦ ШПАРГАЛКИ                                 ║
+╚══════════════════════════════════════════════════════════════════════╝

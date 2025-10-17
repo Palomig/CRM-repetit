@@ -1,0 +1,4 @@
+Django==3.2.25
+django-environ==0.11.2
+mysqlclient==2.1.1
+djangorestframework==3.14.0
