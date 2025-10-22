@@ -44,11 +44,18 @@ function getRussianDayName($englishDay) {
 
 // Функция для отправки JSON ответа
 function jsonResponse($data, $statusCode = 200) {
+    // Clear any output buffer
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+
     http_response_code($statusCode);
+
     // Only set header if not already set
     if (!headers_sent()) {
         header('Content-Type: application/json; charset=utf-8');
     }
+
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }

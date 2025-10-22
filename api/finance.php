@@ -4,13 +4,19 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Set JSON header early
-header('Content-Type: application/json; charset=utf-8');
+// Start output buffering to catch any unexpected output
+ob_start();
 
 try {
     require_once '../includes/config.php';
     require_once '../includes/db.php';
     require_once '../includes/functions.php';
+
+    // Clear any buffered output from includes
+    ob_clean();
+
+    // Set JSON header
+    header('Content-Type: application/json; charset=utf-8');
 
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
@@ -46,13 +52,25 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Database Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    ob_clean(); // Clear any buffered output
     http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error' => 'Ошибка базы данных: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     exit;
 } catch (Exception $e) {
     error_log("API Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    ob_clean(); // Clear any buffered output
     http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error' => 'Произошла ошибка: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    exit;
+} catch (Throwable $e) {
+    // Catch any fatal errors
+    error_log("Fatal Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    ob_clean(); // Clear any buffered output
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['error' => 'Критическая ошибка: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
