@@ -28,9 +28,9 @@ try {
     switch ($method) {
         case 'GET':
             if (isset($_GET['stats'])) {
-                getFinanceStats();
+                api_getFinanceStats();
             } else {
-                getTransactions();
+                api_getTransactions();
             }
             break;
 
@@ -38,14 +38,14 @@ try {
             if (!$input) {
                 jsonResponse(['error' => 'Некорректные данные запроса'], 400);
             }
-            createTransaction($input);
+            api_createTransaction($input);
             break;
 
         case 'DELETE':
             if (!isset($input['id'])) {
                 jsonResponse(['error' => 'ID не указан'], 400);
             }
-            deleteTransaction($input['id']);
+            api_deleteTransaction($input['id']);
             break;
 
         default:
@@ -75,12 +75,12 @@ try {
     exit;
 }
 
-function getTransactions() {
+function api_getTransactions() {
     $month = $_GET['month'] ?? date('m');
     $year = $_GET['year'] ?? date('Y');
-    
+
     $transactions = db()->fetchAll("
-        SELECT 
+        SELECT
             f.*,
             s.name as student_name,
             t.name as teacher_name
@@ -90,28 +90,28 @@ function getTransactions() {
         WHERE MONTH(f.transaction_date) = ? AND YEAR(f.transaction_date) = ?
         ORDER BY f.transaction_date DESC, f.created_at DESC
     ", [$month, $year]);
-    
+
     jsonResponse(['success' => true, 'data' => $transactions]);
 }
 
-function getFinanceStats() {
+function api_getFinanceStats() {
     $month = $_GET['month'] ?? date('m');
     $year = $_GET['year'] ?? date('Y');
-    
+
     // Общая статистика
     $summary = db()->fetchOne("
-        SELECT 
+        SELECT
             SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as total_income,
             SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as total_expense
         FROM finance
         WHERE MONTH(transaction_date) = ? AND YEAR(transaction_date) = ?
     ", [$month, $year]);
-    
+
     $summary['profit'] = ($summary['total_income'] ?? 0) - ($summary['total_expense'] ?? 0);
-    
+
     // По категориям
     $byCategory = db()->fetchAll("
-        SELECT 
+        SELECT
             category,
             type,
             SUM(amount) as total
@@ -120,39 +120,39 @@ function getFinanceStats() {
         GROUP BY category, type
         ORDER BY total DESC
     ", [$month, $year]);
-    
+
     // По предметам
     $bySubject = db()->fetchAll("
-        SELECT 
+        SELECT
             s.subject,
             SUM(f.amount) as total
         FROM finance f
         JOIN students s ON f.student_id = s.id
-        WHERE f.type = 'income' 
-        AND MONTH(f.transaction_date) = ? 
+        WHERE f.type = 'income'
+        AND MONTH(f.transaction_date) = ?
         AND YEAR(f.transaction_date) = ?
         GROUP BY s.subject
         ORDER BY total DESC
     ", [$month, $year]);
-    
+
     // По преподавателям
     $byTeacher = db()->fetchAll("
-        SELECT 
+        SELECT
             t.name,
             SUM(f.amount) as total
         FROM finance f
         JOIN teachers t ON f.teacher_id = t.id
-        WHERE f.type = 'expense' 
+        WHERE f.type = 'expense'
         AND f.category = 'Зарплата'
-        AND MONTH(f.transaction_date) = ? 
+        AND MONTH(f.transaction_date) = ?
         AND YEAR(f.transaction_date) = ?
         GROUP BY t.id, t.name
         ORDER BY total DESC
     ", [$month, $year]);
-    
+
     // Динамика по месяцам (последние 6 месяцев)
     $monthlyTrend = db()->fetchAll("
-        SELECT 
+        SELECT
             DATE_FORMAT(transaction_date, '%Y-%m') as month,
             SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
             SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
@@ -161,7 +161,7 @@ function getFinanceStats() {
         GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
         ORDER BY month
     ", [$year, $month]);
-    
+
     jsonResponse([
         'success' => true,
         'data' => [
@@ -174,7 +174,7 @@ function getFinanceStats() {
     ]);
 }
 
-function createTransaction($data) {
+function api_createTransaction($data) {
     // Log incoming data for debugging
     error_log("Create transaction data: " . json_encode($data));
 
@@ -223,12 +223,12 @@ function createTransaction($data) {
     }
 }
 
-function deleteTransaction($id) {
+function api_deleteTransaction($id) {
     if (!$id) {
         jsonResponse(['error' => 'ID не указан'], 400);
     }
-    
+
     db()->query("DELETE FROM finance WHERE id = ?", [$id]);
-    
+
     jsonResponse(['success' => true, 'message' => 'Транзакция успешно удалена']);
 }
