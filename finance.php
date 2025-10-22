@@ -420,13 +420,18 @@ function financeApp() {
 
         async saveTransaction() {
             try {
+                console.log('Sending transaction data:', this.form);
+
                 const response = await fetch('/api/finance.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(this.form)
                 });
 
+                console.log('Response status:', response.status);
+
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (data.success) {
                     showNotification(data.message, 'success');
@@ -434,10 +439,11 @@ function financeApp() {
                     this.loadData();
                 } else {
                     showNotification(data.error || 'Ошибка сохранения', 'error');
+                    console.error('Server error:', data.error);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showNotification('Ошибка сохранения', 'error');
+                console.error('Fetch error:', error);
+                showNotification('Ошибка сохранения: ' + error.message, 'error');
             }
         },
 
