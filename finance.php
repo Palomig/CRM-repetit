@@ -421,22 +421,23 @@ function financeApp() {
         async saveTransaction() {
             try {
                 const response = await fetch('/api/finance.php', {
-                    method: 'DELETE',
+                    method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({id: id})
+                    body: JSON.stringify(this.form)
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showNotification(data.message, 'success');
+                    this.showModal = false;
                     this.loadData();
                 } else {
-                    showNotification(data.error || 'Ошибка удаления', 'error');
+                    showNotification(data.error || 'Ошибка сохранения', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showNotification('Ошибка удаления', 'error');
+                showNotification('Ошибка сохранения', 'error');
             }
         },
 

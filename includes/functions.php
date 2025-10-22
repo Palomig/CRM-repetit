@@ -62,13 +62,13 @@ function validate($data, $rules) {
                 $errors[$field] = "Поле обязательно для заполнения";
                 break;
             }
-            
-            if ($rule === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+
+            if ($rule === 'email' && !empty($value) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
                 $errors[$field] = "Некорректный email";
                 break;
             }
-            
-            if ($rule === 'numeric' && !is_numeric($value)) {
+
+            if ($rule === 'numeric' && !empty($value) && !is_numeric($value)) {
                 $errors[$field] = "Значение должно быть числом";
                 break;
             }
