@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config.php';
+// Config должен быть загружен до подключения этого файла
 
 class Database {
     private static $instance = null;
