@@ -479,30 +479,6 @@ function financeApp() {
 
         formatDate(date) {
             return new Date(date).toLocaleDateString('ru-RU');
-        }
-    }
-}
-</script>
-
-<?php require_once 'includes/footer.php'; ?>
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(this.form)
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    this.showModal = false;
-                    this.loadData();
-                } else {
-                    showNotification(data.error || 'Ошибка сохранения', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Ошибка сохранения', 'error');
-            }
         },
 
         async deleteTransactionConfirm(id) {
@@ -510,3 +486,26 @@ function financeApp() {
 
             try {
                 const response = await fetch('/api/finance.php', {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    this.loadData();
+                } else {
+                    showNotification(data.error || 'Ошибка удаления', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Ошибка удаления', 'error');
+            }
+        }
+    }
+}
+</script>
+
+<?php require_once 'includes/footer.php'; ?>
