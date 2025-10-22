@@ -9,8 +9,8 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
     <!-- Заголовок и кнопки -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Задачи</h1>
-            <p class="text-gray-600 mt-1">Управление задачами центра</p>
+            <h1 class="text-3xl font-bold text-white">Задачи</h1>
+            <p class="text-gray-400 mt-1">Управление задачами центра</p>
         </div>
         <button @click="showModal = true; modalMode = 'create'; resetForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Добавить задачу
@@ -18,26 +18,26 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
     </div>
 
     <!-- Фильтры -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 mb-6">
         <div class="flex flex-wrap gap-2">
-            <button @click="filterStatus = ''; loadTasks()" 
+            <button @click="filterStatus = ''; loadTasks()"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    :class="filterStatus === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    :class="filterStatus === '' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'">
                 Все
             </button>
-            <button @click="filterStatus = 'pending'; loadTasks()" 
+            <button @click="filterStatus = 'pending'; loadTasks()"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    :class="filterStatus === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    :class="filterStatus === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'">
                 Ожидают
             </button>
-            <button @click="filterStatus = 'in_progress'; loadTasks()" 
+            <button @click="filterStatus = 'in_progress'; loadTasks()"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    :class="filterStatus === 'in_progress' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    :class="filterStatus === 'in_progress' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'">
                 В работе
             </button>
-            <button @click="filterStatus = 'completed'; loadTasks()" 
+            <button @click="filterStatus = 'completed'; loadTasks()"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    :class="filterStatus === 'completed' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    :class="filterStatus === 'completed' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'">
                 Завершены
             </button>
         </div>
@@ -46,29 +46,29 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
     <!-- Список задач -->
     <div class="space-y-4">
         <template x-for="task in tasks" :key="task.id">
-            <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="bg-gray-800 border border-gray-700 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div class="p-6">
                     <div class="flex items-start justify-between">
                         <div class="flex items-start space-x-4 flex-1">
                             <!-- Чекбокс -->
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 :checked="task.status === 'completed'"
                                 @change="toggleTaskStatus(task)"
                                 class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            
+
                             <div class="flex-1">
                                 <!-- Заголовок и приоритет -->
                                 <div class="flex items-center space-x-2 mb-2">
-                                    <h3 class="text-lg font-medium text-gray-900" 
+                                    <h3 class="text-lg font-medium text-white"
                                         :class="{'line-through text-gray-500': task.status === 'completed'}"
                                         x-text="task.title">
                                     </h3>
                                     <span class="px-2 py-1 text-xs font-medium rounded-full"
                                           :class="{
-                                              'bg-red-100 text-red-800': task.priority === 'high',
-                                              'bg-yellow-100 text-yellow-800': task.priority === 'medium',
-                                              'bg-gray-100 text-gray-800': task.priority === 'low'
+                                              'bg-red-500/20 text-red-400': task.priority === 'high',
+                                              'bg-yellow-500/20 text-yellow-400': task.priority === 'medium',
+                                              'bg-gray-500/20 text-gray-400': task.priority === 'low'
                                           }">
                                         <template x-if="task.priority === 'high'">Высокий</template>
                                         <template x-if="task.priority === 'medium'">Средний</template>
@@ -77,22 +77,22 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                                 </div>
 
                                 <!-- Описание -->
-                                <p x-show="task.description" class="text-sm text-gray-600 mb-3" x-text="task.description"></p>
+                                <p x-show="task.description" class="text-sm text-gray-400 mb-3" x-text="task.description"></p>
 
                                 <!-- Метаданные -->
-                                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-400">
                                     <div x-show="task.student_name">
                                         <i class="fas fa-user-graduate mr-1"></i>
-                                        <span x-text="task.student_name"></span>
+                                        <span class="text-gray-200" x-text="task.student_name"></span>
                                     </div>
                                     <div x-show="task.teacher_name">
                                         <i class="fas fa-chalkboard-teacher mr-1"></i>
-                                        <span x-text="task.teacher_name"></span>
+                                        <span class="text-gray-200" x-text="task.teacher_name"></span>
                                     </div>
                                     <div>
                                         <i class="fas fa-calendar mr-1"></i>
-                                        <span x-text="formatDate(task.due_date)"></span>
-                                        <span x-show="isOverdue(task.due_date) && task.status !== 'completed'" class="ml-1 text-red-600 font-medium">
+                                        <span class="text-gray-200" x-text="formatDate(task.due_date)"></span>
+                                        <span x-show="isOverdue(task.due_date) && task.status !== 'completed'" class="ml-1 text-red-400 font-medium">
                                             (просрочено)
                                         </span>
                                     </div>
@@ -102,22 +102,22 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
 
                         <!-- Кнопки действий -->
                         <div class="flex space-x-2 ml-4">
-                            <button @click="editTask(task)" class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded">
+                            <button @click="editTask(task)" class="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-gray-700 rounded">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button @click="deleteTaskConfirm(task.id)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded">
+                            <button @click="deleteTaskConfirm(task.id)" class="p-2 text-red-400 hover:text-red-300 hover:bg-gray-700 rounded">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Статус -->
-                    <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="mt-4 pt-4 border-t border-gray-700">
                         <span class="inline-block px-3 py-1 text-xs font-medium rounded-full"
                               :class="{
-                                  'bg-yellow-100 text-yellow-800': task.status === 'pending',
-                                  'bg-blue-100 text-blue-800': task.status === 'in_progress',
-                                  'bg-green-100 text-green-800': task.status === 'completed'
+                                  'bg-yellow-500/20 text-yellow-400': task.status === 'pending',
+                                  'bg-blue-500/20 text-blue-400': task.status === 'in_progress',
+                                  'bg-green-500/20 text-green-400': task.status === 'completed'
                               }">
                             <template x-if="task.status === 'pending'">Ожидает</template>
                             <template x-if="task.status === 'in_progress'">В работе</template>
@@ -129,9 +129,9 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
         </template>
 
         <!-- Пустое состояние -->
-        <div x-show="tasks.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
-            <i class="fas fa-tasks text-6xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500">Нет задач</p>
+        <div x-show="tasks.length === 0" class="bg-gray-800 border border-gray-700 rounded-lg shadow p-12 text-center">
+            <i class="fas fa-tasks text-6xl text-gray-600 mb-4"></i>
+            <p class="text-gray-400">Нет задач</p>
         </div>
     </div>
 
@@ -139,10 +139,10 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
     <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="showModal = false">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <div class="relative bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-lg w-full p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-gray-900" x-text="modalMode === 'create' ? 'Добавить задачу' : 'Редактировать задачу'"></h3>
-                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-xl font-bold text-white" x-text="modalMode === 'create' ? 'Добавить задачу' : 'Редактировать задачу'"></h3>
+                    <button @click="showModal = false" class="text-gray-500 hover:text-gray-400">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -150,24 +150,24 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                 <form @submit.prevent="saveTask">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Название задачи *</label>
-                            <input type="text" x-model="form.title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Название задачи *</label>
+                            <input type="text" x-model="form.title" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                            <textarea x-model="form.description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Описание</label>
+                            <textarea x-model="form.description" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Срок выполнения *</label>
-                            <input type="date" x-model="form.due_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Срок выполнения *</label>
+                            <input type="date" x-model="form.due_date" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Приоритет</label>
-                                <select x-model="form.priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-sm font-medium text-gray-200 mb-2">Приоритет</label>
+                                <select x-model="form.priority" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                     <option value="low">Низкий</option>
                                     <option value="medium">Средний</option>
                                     <option value="high">Высокий</option>
@@ -175,8 +175,8 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
-                                <select x-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-sm font-medium text-gray-200 mb-2">Статус</label>
+                                <select x-model="form.status" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                     <option value="pending">Ожидает</option>
                                     <option value="in_progress">В работе</option>
                                     <option value="completed">Завершена</option>
@@ -185,8 +185,8 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ученик</label>
-                            <select x-model="form.student_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Ученик</label>
+                            <select x-model="form.student_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Не указан</option>
                                 <?php foreach ($students as $student): ?>
                                     <option value="<?= $student['id'] ?>"><?= e($student['name']) ?></option>
@@ -195,8 +195,8 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Преподаватель</label>
-                            <select x-model="form.teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Преподаватель</label>
+                            <select x-model="form.teacher_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Не указан</option>
                                 <?php foreach ($teachers as $teacher): ?>
                                     <option value="<?= $teacher['id'] ?>"><?= e($teacher['name']) ?></option>
@@ -206,7 +206,7 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" @click="showModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 hover:bg-gray-600">
                             Отмена
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
