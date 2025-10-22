@@ -12,8 +12,8 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Расписание</h1>
-                <p class="text-gray-600 mt-1">Календарь занятий</p>
+                <h1 class="text-3xl font-bold text-white">Расписание</h1>
+                <p class="text-gray-400 mt-1">Календарь занятий</p>
             </div>
             <button @click="showModal = true; modalMode = 'create'; resetForm()" class="mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <i class="fas fa-plus mr-2"></i>Добавить урок
@@ -21,16 +21,16 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
         </div>
 
         <!-- Фильтр по преподавателю -->
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4">
             <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <label class="text-sm font-medium text-gray-700">Фильтр по преподавателю:</label>
-                <select x-model="filterTeacherId" @change="calendar.refetchEvents()" class="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="text-sm font-medium text-gray-200">Фильтр по преподавателю:</label>
+                <select x-model="filterTeacherId" @change="calendar.refetchEvents()" class="flex-1 sm:flex-initial px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все преподаватели</option>
                     <?php foreach ($teachers as $teacher): ?>
                         <option value="<?= $teacher['id'] ?>"><?= e($teacher['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button @click="filterTeacherId = ''; calendar.refetchEvents()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <button @click="filterTeacherId = ''; calendar.refetchEvents()" class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">
                     <i class="fas fa-redo mr-2"></i>Сбросить
                 </button>
             </div>
@@ -38,7 +38,7 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
     </div>
 
     <!-- Календарь -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-6">
         <div id="calendar"></div>
     </div>
 
@@ -46,10 +46,10 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
     <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="showModal = false">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <div class="relative bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-2xl w-full p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-gray-900" x-text="modalMode === 'create' ? 'Добавить урок' : modalMode === 'edit' ? 'Редактировать урок' : 'Информация об уроке'"></h3>
-                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-xl font-bold text-white" x-text="modalMode === 'create' ? 'Добавить урок' : modalMode === 'edit' ? 'Редактировать урок' : 'Информация об уроке'"></h3>
+                    <button @click="showModal = false" class="text-gray-500 hover:text-gray-400">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -57,16 +57,16 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                 <form @submit.prevent="saveLesson" x-show="modalMode !== 'view'">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип урока</label>
-                            <select x-model="form.lessonType" @change="handleLessonTypeChange()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Тип урока</label>
+                            <select x-model="form.lessonType" @change="handleLessonTypeChange()" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="individual">Индивидуальный</option>
                                 <option value="group">Групповой</option>
                             </select>
                         </div>
 
                         <div x-show="form.lessonType === 'individual'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ученик *</label>
-                            <select x-model="form.student_id" :required="form.lessonType === 'individual'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Ученик *</label>
+                            <select x-model="form.student_id" :required="form.lessonType === 'individual'" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите ученика</option>
                                 <?php foreach ($students as $student): ?>
                                     <option value="<?= $student['id'] ?>"><?= e($student['name']) ?></option>
@@ -75,8 +75,8 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                         </div>
 
                         <div x-show="form.lessonType === 'group'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Группа *</label>
-                            <select x-model="form.group_id" :required="form.lessonType === 'group'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Группа *</label>
+                            <select x-model="form.group_id" :required="form.lessonType === 'group'" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите группу</option>
                                 <?php foreach ($groups as $group): ?>
                                     <option value="<?= $group['id'] ?>"><?= e($group['name']) ?></option>
@@ -85,8 +85,8 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Преподаватель *</label>
-                            <select x-model="form.teacher_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Преподаватель *</label>
+                            <select x-model="form.teacher_id" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите преподавателя</option>
                                 <?php foreach ($teachers as $teacher): ?>
                                     <option value="<?= $teacher['id'] ?>"><?= e($teacher['name']) ?></option>
@@ -95,8 +95,8 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Кабинет *</label>
-                            <select x-model="form.room_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Кабинет *</label>
+                            <select x-model="form.room_id" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите кабинет</option>
                                 <?php foreach ($rooms as $room): ?>
                                     <option value="<?= $room['id'] ?>"><?= e($room['name']) ?></option>
@@ -105,23 +105,23 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата *</label>
-                            <input type="date" x-model="form.lesson_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Дата *</label>
+                            <input type="date" x-model="form.lesson_date" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Время *</label>
-                            <input type="time" x-model="form.lesson_time" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Время *</label>
+                            <input type="time" x-model="form.lesson_time" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Длительность (мин)</label>
-                            <input type="number" x-model="form.duration" min="15" step="15" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Длительность (мин)</label>
+                            <input type="number" x-model="form.duration" min="15" step="15" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
-                            <select x-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Статус</label>
+                            <select x-model="form.status" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="scheduled">Запланирован</option>
                                 <option value="completed">Завершен</option>
                                 <option value="cancelled">Отменен</option>
@@ -129,13 +129,13 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Примечания</label>
-                            <textarea x-model="form.notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Примечания</label>
+                            <textarea x-model="form.notes" rows="2" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" @click="showModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 hover:bg-gray-600">
                             Отмена
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
@@ -148,25 +148,25 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
                 <div x-show="modalMode === 'view'" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <p class="text-sm text-gray-600">Преподаватель</p>
-                            <p class="font-medium" x-text="viewData.teacher_name"></p>
+                            <p class="text-sm text-gray-400">Преподаватель</p>
+                            <p class="font-medium text-white" x-text="viewData.teacher_name"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Кабинет</p>
-                            <p class="font-medium" x-text="viewData.room_name"></p>
+                            <p class="text-sm text-gray-400">Кабинет</p>
+                            <p class="font-medium text-white" x-text="viewData.room_name"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Длительность</p>
-                            <p class="font-medium" x-text="viewData.duration + ' мин'"></p>
+                            <p class="text-sm text-gray-400">Длительность</p>
+                            <p class="font-medium text-white" x-text="viewData.duration + ' мин'"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Статус</p>
-                            <p class="font-medium" x-text="getStatusText(viewData.status)"></p>
+                            <p class="text-sm text-gray-400">Статус</p>
+                            <p class="font-medium text-white" x-text="getStatusText(viewData.status)"></p>
                         </div>
                     </div>
-                    <div x-show="viewData.notes" class="border-t pt-4">
-                        <p class="text-sm text-gray-600 mb-2">Примечания</p>
-                        <p x-text="viewData.notes"></p>
+                    <div x-show="viewData.notes" class="border-t border-gray-700 pt-4">
+                        <p class="text-sm text-gray-400 mb-2">Примечания</p>
+                        <p class="text-white" x-text="viewData.notes"></p>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
                         <button @click="editLesson(viewData)" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

@@ -15,8 +15,8 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
     <!-- Заголовок и кнопки -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Ученики</h1>
-            <p class="text-gray-600 mt-1">Управление учениками центра</p>
+            <h1 class="text-3xl font-bold text-white">Ученики</h1>
+            <p class="text-gray-400 mt-1">Управление учениками центра</p>
         </div>
         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <button @click="showModal = true; modalMode = 'create'; resetForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -29,11 +29,11 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
     </div>
 
     <!-- Фильтры -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
-                <select x-model="filters.status" @change="loadStudents()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Статус</label>
+                <select x-model="filters.status" @change="loadStudents()" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
                     <option value="active">Активные</option>
                     <option value="paused">Приостановлены</option>
@@ -41,15 +41,15 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Тип обучения</label>
-                <select x-model="filters.type" @change="loadStudents()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Тип обучения</label>
+                <select x-model="filters.type" @change="loadStudents()" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
                     <option value="individual">Индивидуальные</option>
                     <option value="group">Групповые</option>
                 </select>
             </div>
             <div class="flex items-end">
-                <button @click="filters = {status: '', type: ''}; loadStudents()" class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <button @click="filters = {status: '', type: ''}; loadStudents()" class="w-full px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fas fa-redo mr-2"></i>Сбросить фильтры
                 </button>
             </div>
@@ -57,45 +57,45 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
     </div>
 
     <!-- Таблица учеников -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table id="studentsTable" class="w-full">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ученик</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Класс</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Предмет</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Родитель</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ученик</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Класс</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Предмет</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Тип</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Родитель</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Действия</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-gray-800 divide-y divide-gray-700">
                     <template x-for="student in students" :key="student.id">
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-700/50">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-medium text-gray-900" x-text="student.name"></div>
-                                <div class="text-sm text-gray-500" x-show="student.group_name" x-text="'Группа: ' + student.group_name"></div>
+                                <div class="font-medium text-white" x-text="student.name"></div>
+                                <div class="text-sm text-gray-400" x-show="student.group_name" x-text="'Группа: ' + student.group_name"></div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="student.class"></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="student.subject"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200" x-text="student.class"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200" x-text="student.subject"></td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full" 
-                                      :class="student.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'"
+                                <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                      :class="student.type === 'individual' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'"
                                       x-text="student.type === 'individual' ? 'Индивид.' : 'Группа'">
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900" x-text="student.parent_name"></div>
+                                <div class="text-sm text-gray-200" x-text="student.parent_name"></div>
                                 <div class="flex items-center space-x-2 mt-1">
-                                    <a :href="'tel:' + student.parent_phone" class="text-blue-600 hover:text-blue-800">
+                                    <a :href="'tel:' + student.parent_phone" class="text-blue-400 hover:text-blue-300">
                                         <i class="fas fa-phone text-xs"></i>
                                     </a>
-                                    <a x-show="student.parent_whatsapp" :href="'https://wa.me/' + student.parent_whatsapp.replace(/[^0-9]/g, '')" target="_blank" class="text-green-600 hover:text-green-800">
+                                    <a x-show="student.parent_whatsapp" :href="'https://wa.me/' + student.parent_whatsapp.replace(/[^0-9]/g, '')" target="_blank" class="text-green-400 hover:text-green-300">
                                         <i class="fab fa-whatsapp text-xs"></i>
                                     </a>
-                                    <a x-show="student.parent_telegram" :href="'https://t.me/' + student.parent_telegram.replace('@', '')" target="_blank" class="text-blue-500 hover:text-blue-700">
+                                    <a x-show="student.parent_telegram" :href="'https://t.me/' + student.parent_telegram.replace('@', '')" target="_blank" class="text-blue-400 hover:text-blue-300">
                                         <i class="fab fa-telegram text-xs"></i>
                                     </a>
                                 </div>
@@ -103,21 +103,21 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full"
                                       :class="{
-                                          'bg-green-100 text-green-800': student.status === 'active',
-                                          'bg-yellow-100 text-yellow-800': student.status === 'paused',
-                                          'bg-gray-100 text-gray-800': student.status === 'inactive'
+                                          'bg-green-500/20 text-green-400': student.status === 'active',
+                                          'bg-yellow-500/20 text-yellow-400': student.status === 'paused',
+                                          'bg-gray-500/20 text-gray-400': student.status === 'inactive'
                                       }"
                                       x-text="student.status === 'active' ? 'Активен' : student.status === 'paused' ? 'Пауза' : 'Неактивен'">
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button @click="viewStudent(student)" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <button @click="viewStudent(student)" class="text-blue-400 hover:text-blue-300 mr-3">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button @click="editStudent(student)" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                <button @click="editStudent(student)" class="text-indigo-400 hover:text-indigo-300 mr-3">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button @click="deleteStudentConfirm(student.id)" class="text-red-600 hover:text-red-900">
+                                <button @click="deleteStudentConfirm(student.id)" class="text-red-400 hover:text-red-300">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
@@ -132,10 +132,10 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
     <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="showModal = false">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <div class="relative bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-2xl w-full p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-gray-900" x-text="modalMode === 'create' ? 'Добавить ученика' : modalMode === 'edit' ? 'Редактировать ученика' : 'Информация об ученике'"></h3>
-                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-xl font-bold text-white" x-text="modalMode === 'create' ? 'Добавить ученика' : modalMode === 'edit' ? 'Редактировать ученика' : 'Информация об ученике'"></h3>
+                    <button @click="showModal = false" class="text-gray-500 hover:text-gray-400">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -143,23 +143,23 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                 <form @submit.prevent="saveStudent" x-show="modalMode !== 'view'">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя ученика *</label>
-                            <input type="text" x-model="form.name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Имя ученика *</label>
+                            <input type="text" x-model="form.name" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Класс *</label>
-                            <input type="text" x-model="form.class" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Класс *</label>
+                            <input type="text" x-model="form.class" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Предмет *</label>
-                            <input type="text" x-model="form.subject" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Предмет *</label>
+                            <input type="text" x-model="form.subject" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Родитель *</label>
-                            <select x-model="form.parent_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Родитель *</label>
+                            <select x-model="form.parent_id" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите родителя</option>
                                 <?php foreach ($parents as $parent): ?>
                                     <option value="<?= $parent['id'] ?>"><?= e($parent['name']) ?> (<?= e($parent['phone']) ?>)</option>
@@ -168,16 +168,16 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип обучения *</label>
-                            <select x-model="form.type" @change="handleTypeChange()" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Тип обучения *</label>
+                            <select x-model="form.type" @change="handleTypeChange()" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="individual">Индивидуальное</option>
                                 <option value="group">Групповое</option>
                             </select>
                         </div>
 
                         <div x-show="form.type === 'group'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Группа</label>
-                            <select x-model="form.group_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Группа</label>
+                            <select x-model="form.group_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите группу</option>
                                 <?php foreach ($groups as $group): ?>
                                     <option value="<?= $group['id'] ?>"><?= e($group['name']) ?> (<?= e($group['subject']) ?>)</option>
@@ -186,8 +186,8 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                         </div>
 
                         <div x-show="form.type === 'individual'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Преподаватель</label>
-                            <select x-model="form.teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Преподаватель</label>
+                            <select x-model="form.teacher_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Выберите преподавателя</option>
                                 <?php foreach ($teachers as $teacher): ?>
                                     <option value="<?= $teacher['id'] ?>"><?= e($teacher['name']) ?></option>
@@ -196,13 +196,13 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Стоимость урока (₽)</label>
-                            <input type="number" x-model="form.price" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Стоимость урока (₽)</label>
+                            <input type="number" x-model="form.price" step="0.01" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
-                            <select x-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Статус</label>
+                            <select x-model="form.status" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="active">Активен</option>
                                 <option value="paused">Приостановлен</option>
                                 <option value="inactive">Неактивен</option>
@@ -210,13 +210,13 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Примечания</label>
-                            <textarea x-model="form.notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Примечания</label>
+                            <textarea x-model="form.notes" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" @click="showModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 hover:bg-gray-600">
                             Отмена
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
@@ -229,27 +229,27 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                 <div x-show="modalMode === 'view'" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <p class="text-sm text-gray-600">Класс</p>
-                            <p class="font-medium" x-text="viewData.class"></p>
+                            <p class="text-sm text-gray-400">Класс</p>
+                            <p class="font-medium text-white" x-text="viewData.class"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Предмет</p>
-                            <p class="font-medium" x-text="viewData.subject"></p>
+                            <p class="text-sm text-gray-400">Предмет</p>
+                            <p class="font-medium text-white" x-text="viewData.subject"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Тип обучения</p>
-                            <p class="font-medium" x-text="viewData.type === 'individual' ? 'Индивидуальное' : 'Групповое'"></p>
+                            <p class="text-sm text-gray-400">Тип обучения</p>
+                            <p class="font-medium text-white" x-text="viewData.type === 'individual' ? 'Индивидуальное' : 'Групповое'"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Статус</p>
-                            <p class="font-medium" x-text="viewData.status === 'active' ? 'Активен' : viewData.status === 'paused' ? 'Пауза' : 'Неактивен'"></p>
+                            <p class="text-sm text-gray-400">Статус</p>
+                            <p class="font-medium text-white" x-text="viewData.status === 'active' ? 'Активен' : viewData.status === 'paused' ? 'Пауза' : 'Неактивен'"></p>
                         </div>
                     </div>
-                    <div class="border-t pt-4">
-                        <p class="text-sm text-gray-600 mb-2">Родитель</p>
-                        <p class="font-medium" x-text="viewData.parent_name"></p>
+                    <div class="border-t border-gray-700 pt-4">
+                        <p class="text-sm text-gray-400 mb-2">Родитель</p>
+                        <p class="font-medium text-white" x-text="viewData.parent_name"></p>
                         <div class="flex space-x-4 mt-2">
-                            <a :href="'tel:' + viewData.parent_phone" class="text-blue-600 hover:text-blue-800">
+                            <a :href="'tel:' + viewData.parent_phone" class="text-blue-400 hover:text-blue-300">
                                 <i class="fas fa-phone mr-1"></i><span x-text="viewData.parent_phone"></span>
                             </a>
                         </div>
@@ -263,10 +263,10 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
     <div x-show="showParentModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="showParentModal = false">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <div class="relative bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-lg w-full p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-gray-900">Добавить родителя</h3>
-                    <button @click="showParentModal = false" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-xl font-bold text-white">Добавить родителя</h3>
+                    <button @click="showParentModal = false" class="text-gray-500 hover:text-gray-400">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -274,28 +274,28 @@ $groups = db()->fetchAll("SELECT id, name, subject FROM `groups` WHERE status = 
                 <form @submit.prevent="saveParent">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
-                            <input type="text" x-model="parentForm.name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Имя *</label>
+                            <input type="text" x-model="parentForm.name" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Телефон *</label>
-                            <input type="tel" x-model="parentForm.phone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Телефон *</label>
+                            <input type="tel" x-model="parentForm.phone" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">WhatsApp</label>
-                            <input type="text" x-model="parentForm.whatsapp" placeholder="+79001234567" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">WhatsApp</label>
+                            <input type="text" x-model="parentForm.whatsapp" placeholder="+79001234567" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Telegram</label>
-                            <input type="text" x-model="parentForm.telegram" placeholder="@username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Telegram</label>
+                            <input type="text" x-model="parentForm.telegram" placeholder="@username" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" @click="showParentModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        <button type="button" @click="showParentModal = false" class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 hover:bg-gray-600">
                             Отмена
                         </button>
                         <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
