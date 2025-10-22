@@ -134,6 +134,9 @@ function getFinanceStats() {
 }
 
 function createTransaction($data) {
+    // Log incoming data for debugging
+    error_log("Create transaction data: " . json_encode($data));
+
     $errors = validate($data, [
         'type' => ['required'],
         'amount' => ['required', 'numeric'],
@@ -142,6 +145,7 @@ function createTransaction($data) {
     ]);
 
     if (!empty($errors)) {
+        error_log("Validation errors: " . json_encode($errors));
         jsonResponse(['error' => 'Ошибка валидации', 'errors' => $errors], 400);
     }
 
@@ -149,22 +153,33 @@ function createTransaction($data) {
     $student_id = !empty($data['student_id']) ? $data['student_id'] : null;
     $teacher_id = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
 
-    $sql = "INSERT INTO finance (student_id, teacher_id, type, amount, category, description, transaction_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    error_log("Processed IDs - student_id: " . var_export($student_id, true) . ", teacher_id: " . var_export($teacher_id, true));
 
-    db()->query($sql, [
-        $student_id,
-        $teacher_id,
-        $data['type'],
-        $data['amount'],
-        $data['category'],
-        $data['description'] ?? null,
-        $data['transaction_date']
-    ]);
-    
-    $id = db()->lastInsertId();
-    
-    jsonResponse(['success' => true, 'id' => $id, 'message' => 'Транзакция успешно добавлена'], 201);
+    try {
+        $sql = "INSERT INTO finance (student_id, teacher_id, type, amount, category, description, transaction_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        $params = [
+            $student_id,
+            $teacher_id,
+            $data['type'],
+            $data['amount'],
+            $data['category'],
+            $data['description'] ?? null,
+            $data['transaction_date']
+        ];
+
+        error_log("SQL params: " . json_encode($params));
+
+        db()->query($sql, $params);
+
+        $id = db()->lastInsertId();
+
+        jsonResponse(['success' => true, 'id' => $id, 'message' => 'Транзакция успешно добавлена'], 201);
+    } catch (Exception $e) {
+        error_log("Transaction insert error: " . $e->getMessage());
+        jsonResponse(['error' => 'Ошибка базы данных: ' . $e->getMessage()], 500);
+    }
 }
 
 function deleteTransaction($id) {
