@@ -140,17 +140,21 @@ function createTransaction($data) {
         'category' => ['required'],
         'transaction_date' => ['required']
     ]);
-    
+
     if (!empty($errors)) {
         jsonResponse(['error' => 'Ошибка валидации', 'errors' => $errors], 400);
     }
-    
-    $sql = "INSERT INTO finance (student_id, teacher_id, type, amount, category, description, transaction_date) 
+
+    // Convert empty strings to null for foreign keys
+    $student_id = !empty($data['student_id']) ? $data['student_id'] : null;
+    $teacher_id = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
+
+    $sql = "INSERT INTO finance (student_id, teacher_id, type, amount, category, description, transaction_date)
             VALUES (?, ?, ?, ?, ?, ?, ?)";
-    
+
     db()->query($sql, [
-        $data['student_id'] ?? null,
-        $data['teacher_id'] ?? null,
+        $student_id,
+        $teacher_id,
         $data['type'],
         $data['amount'],
         $data['category'],
