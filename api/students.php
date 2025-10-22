@@ -153,17 +153,21 @@ function createStudent($data) {
         }
     }
     
-    $sql = "INSERT INTO students (name, class, parent_id, subject, type, group_id, teacher_id, schedule, price, status, notes) 
+    // Обработка пустых строк для внешних ключей
+    $group_id = !empty($data['group_id']) ? $data['group_id'] : null;
+    $teacher_id = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
+
+    $sql = "INSERT INTO students (name, class, parent_id, subject, type, group_id, teacher_id, schedule, price, status, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+
     db()->query($sql, [
         $data['name'],
         $data['class'],
         $data['parent_id'],
         $data['subject'],
         $data['type'],
-        $data['group_id'] ?? null,
-        $data['teacher_id'] ?? null,
+        $group_id,
+        $teacher_id,
         isset($data['schedule']) ? json_encode($data['schedule']) : null,
         $data['price'] ?? 0,
         $data['status'] ?? 'active',
@@ -179,17 +183,21 @@ function updateStudent($data) {
     if (!isset($data['id'])) {
         jsonResponse(['error' => 'ID не указан'], 400);
     }
-    
+
     $fields = [];
     $params = [];
-    
+
     $allowedFields = ['name', 'class', 'parent_id', 'subject', 'type', 'group_id', 'teacher_id', 'schedule', 'last_lesson_date', 'price', 'status', 'notes'];
-    
+
     foreach ($allowedFields as $field) {
         if (isset($data[$field])) {
             if ($field === 'schedule' && is_array($data[$field])) {
                 $fields[] = "$field = ?";
                 $params[] = json_encode($data[$field]);
+            } elseif (($field === 'group_id' || $field === 'teacher_id') && empty($data[$field])) {
+                // Обработка пустых строк для внешних ключей
+                $fields[] = "$field = ?";
+                $params[] = null;
             } else {
                 $fields[] = "$field = ?";
                 $params[] = $data[$field];
