@@ -3,7 +3,8 @@ name: Deploy to Hosting
 on:
   push:
     branches:
-      - master
+      - main      # ← Здесь main, а не master!
+  workflow_dispatch:
 
 jobs:
   deploy:
