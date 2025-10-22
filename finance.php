@@ -286,8 +286,15 @@ function financeApp() {
             try {
                 const params = new URLSearchParams(this.filters);
                 const response = await fetch(`/api/finance.php?${params}`);
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error response:', text);
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                }
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     this.transactions = data.data;
                 }
@@ -300,8 +307,15 @@ function financeApp() {
             try {
                 const params = new URLSearchParams({...this.filters, stats: '1'});
                 const response = await fetch(`/api/finance.php?${params}`);
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error response:', text);
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                }
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     this.stats = data.data;
                 }
@@ -429,6 +443,14 @@ function financeApp() {
                 });
 
                 console.log('Response status:', response.status);
+
+                // If server returned an error, get the text response
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error response:', text);
+                    showNotification('Ошибка сервера: ' + text.substring(0, 100), 'error');
+                    return;
+                }
 
                 const data = await response.json();
                 console.log('Response data:', data);
