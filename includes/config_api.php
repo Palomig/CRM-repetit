@@ -16,9 +16,9 @@ define('SITE_NAME', 'CRM Репетиторский Центр');
 // Часовой пояс
 date_default_timezone_set('Europe/Moscow');
 
-// Обработка ошибок (без вывода на экран для API)
+// Обработка ошибок (временно включен вывод для отладки)
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1); // Временно включено для отладки
 ini_set('log_errors', 1);
 ini_set('error_log', '/home/c/cw95865/error.log');
 
