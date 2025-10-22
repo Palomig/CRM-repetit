@@ -3,7 +3,8 @@ name: Deploy to Hosting
 on:
   push:
     branches:
-      - main      # ← Здесь main, а не master!
+      - main
+      - 'claude/**'  # Автоматически деплоить все ветки Claude
   workflow_dispatch:
 
 jobs:
