@@ -8,7 +8,8 @@ error_reporting(E_ALL);
 ob_start();
 
 try {
-    require_once '../includes/config.php';
+    // Use API-specific config without sessions and headers
+    require_once '../includes/config_api.php';
     require_once '../includes/db.php';
     require_once '../includes/functions.php';
 

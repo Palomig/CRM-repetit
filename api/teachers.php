@@ -1,5 +1,5 @@
 <?php
-require_once '../includes/config.php';
+require_once '../includes/config_api.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
