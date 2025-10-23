@@ -1,9 +1,9 @@
 </main>
 
     <!-- Футер -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
+    <footer class="bg-gray-800 border-t border-gray-700 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-gray-600 text-sm">
+            <p class="text-center text-gray-400 text-sm">
                 &copy; <?= date('Y') ?> <?= e(SITE_NAME) ?>. Все права защищены.
             </p>
         </div>
