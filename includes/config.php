@@ -1,14 +1,14 @@
 <?php
-// Конфигурация базы данных
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'cw95865_rmtutori');
-define('DB_USER', 'cw95865_rmtutori');
-define('DB_PASS', '123456789');
-define('DB_CHARSET', 'utf8mb4');
+// Конфигурация базы данных (только если еще не определены)
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', 'cw95865_rmtutori');
+if (!defined('DB_USER')) define('DB_USER', 'cw95865_rmtutori');
+if (!defined('DB_PASS')) define('DB_PASS', '123456789');
+if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 // Настройки приложения
-define('SITE_URL', 'https://cw95865.tmweb.ru');
-define('SITE_NAME', 'CRM Репетиторский Центр');
+if (!defined('SITE_URL')) define('SITE_URL', 'https://cw95865.tmweb.ru');
+if (!defined('SITE_NAME')) define('SITE_NAME', 'CRM Репетиторский Центр');
 
 // Часовой пояс
 date_default_timezone_set('Europe/Moscow');
