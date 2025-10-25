@@ -128,8 +128,8 @@ function getFinanceStats($month = null, $year = null) {
     return $stats;
 }
 
-// Функция для получения задач
-function getTasks($status = null, $limit = null) {
+// Функция для получения задач (для отображения на страницах, не для API)
+function getTasksForDashboard($status = null, $limit = null) {
     $sql = "
         SELECT 
             t.*,
