@@ -4,7 +4,7 @@ require_once 'includes/header.php';
 // Получение статистики
 $studentsStats = getStudentsStats();
 $financeStats = getFinanceStats();
-$tasks = getTasks('pending', 5);
+$tasks = getTasksForDashboard('pending', 5);
 
 // Получение групп с заполненностью
 $groups = db()->fetchAll("
