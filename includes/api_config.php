@@ -20,17 +20,18 @@ date_default_timezone_set('Europe/Moscow');
 
 // Error handling - log errors but don't display them as HTML (breaks JSON)
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Never display errors in API (breaks JSON response)
+ini_set('display_errors', 1); // TEMPORARY: Enable to see errors for debugging
 ini_set('log_errors', 1);
 ini_set('error_log', '/home/c/cw95865/error.log');
 
+// TEMPORARILY DISABLED - this was converting warnings to exceptions
 // Convert PHP errors to exceptions so we can catch them
-set_error_handler(function($severity, $message, $file, $line) {
+/*set_error_handler(function($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {
         return;
     }
     throw new ErrorException($message, 0, $severity, $file, $line);
-});
+});*/
 
 // Don't start session for API endpoints
 // Don't set HTML security headers for API endpoints
