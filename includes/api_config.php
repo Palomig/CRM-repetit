@@ -18,11 +18,19 @@ define('SITE_NAME', 'CRM Репетиторский Центр');
 // Timezone
 date_default_timezone_set('Europe/Moscow');
 
-// Error handling - show errors for debugging (disable in production)
+// Error handling - log errors but don't display them as HTML (breaks JSON)
 error_reporting(E_ALL);
-ini_set('display_errors', 1); // Set to 0 in production
+ini_set('display_errors', 0); // Never display errors in API (breaks JSON response)
 ini_set('log_errors', 1);
 ini_set('error_log', '/home/c/cw95865/error.log');
+
+// Convert PHP errors to exceptions so we can catch them
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 
 // Don't start session for API endpoints
 // Don't set HTML security headers for API endpoints

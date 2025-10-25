@@ -1,10 +1,16 @@
 <?php
+// Start output buffering to prevent any stray output
+ob_start();
+
 // API endpoint - set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
 require_once '../includes/api_config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+
+// Clean any output from includes
+ob_clean();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);

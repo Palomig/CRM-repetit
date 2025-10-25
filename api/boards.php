@@ -4,11 +4,17 @@
  * Handles CRUD operations for kanban boards
  */
 
+// Start output buffering to prevent any stray output
+ob_start();
+
 // API endpoint - set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../includes/api_config.php';
 require_once __DIR__ . '/../includes/db.php';
+
+// Clean any output from includes
+ob_clean();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $db = db();
@@ -147,9 +153,13 @@ try {
     }
 } catch (Exception $e) {
     error_log("Boards API Error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Произошла ошибка при выполнении операции'
-    ]);
+        'error' => 'Произошла ошибка: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
 }
