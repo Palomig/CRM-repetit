@@ -1,17 +1,50 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/db.php';
-require_once '../includes/functions.php';
+// Start output buffering to prevent any stray output
+ob_start();
 
+// Log start
+file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Tasks API called - Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . " - Query: " . http_build_query($_GET ?? []) . "\n", FILE_APPEND);
+
+// API endpoint - set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
+try {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading api_config...\n", FILE_APPEND);
+    require_once '../includes/api_config.php';
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading db...\n", FILE_APPEND);
+    require_once '../includes/db.php';
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading functions...\n", FILE_APPEND);
+    require_once '../includes/functions.php';
+
+    // Clean any output from includes
+    ob_clean();
+
+    $method = $_SERVER['REQUEST_METHOD'];
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Setup complete. Method: $method\n", FILE_APPEND);
+} catch (Throwable $e) {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] ERROR in setup: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    ob_clean();
+    echo json_encode([
+        'success' => false,
+        'error' => 'Setup error: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Entering switch for method: $method\n", FILE_APPEND);
+
     switch ($method) {
         case 'GET':
+            file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Calling getTasks()...\n", FILE_APPEND);
             getTasks();
+            file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] getTasks() completed\n", FILE_APPEND);
             break;
             
         case 'POST':
@@ -31,14 +64,25 @@ try {
     }
 } catch (Exception $e) {
     error_log("API Error: " . $e->getMessage());
-    jsonResponse(['error' => 'Произошла ошибка: ' . $e->getMessage()], 500);
+    error_log("Stack trace: " . $e->getTraceAsString());
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] EXCEPTION: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    file_put_contents(__DIR__ . '/../tasks_debug.log', $e->getTraceAsString() . "\n\n", FILE_APPEND);
+
+    // Return more detailed error in development (remove in production)
+    jsonResponse([
+        'error' => 'Произошла ошибка: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], 500);
 }
 
 function getTasks() {
     $status = $_GET['status'] ?? null;
-    
+    $boardId = $_GET['board_id'] ?? null;
+
     $sql = "
-        SELECT 
+        SELECT
             t.*,
             s.name as student_name,
             te.name as teacher_name
@@ -46,25 +90,36 @@ function getTasks() {
         LEFT JOIN students s ON t.student_id = s.id
         LEFT JOIN teachers te ON t.teacher_id = te.id
     ";
-    
+
     $params = [];
-    
+    $conditions = [];
+
     if ($status) {
-        $sql .= " WHERE t.status = ?";
+        $conditions[] = "t.status = ?";
         $params[] = $status;
     }
-    
-    $sql .= " ORDER BY 
-        CASE 
+
+    if ($boardId) {
+        $conditions[] = "t.board_id = ?";
+        $params[] = $boardId;
+    }
+
+    if (!empty($conditions)) {
+        $sql .= " WHERE " . implode(' AND ', $conditions);
+    }
+
+    $sql .= " ORDER BY
+        t.position ASC,
+        CASE
             WHEN t.priority = 'high' THEN 1
             WHEN t.priority = 'medium' THEN 2
             WHEN t.priority = 'low' THEN 3
         END,
         t.due_date ASC
     ";
-    
+
     $tasks = db()->fetchAll($sql, $params);
-    
+
     jsonResponse(['success' => true, 'data' => $tasks]);
 }
 
@@ -73,26 +128,46 @@ function createTask($data) {
         'title' => ['required'],
         'due_date' => ['required']
     ]);
-    
+
     if (!empty($errors)) {
         jsonResponse(['error' => 'Ошибка валидации', 'errors' => $errors], 400);
     }
-    
-    $sql = "INSERT INTO tasks (student_id, teacher_id, title, description, due_date, priority, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
-    
+
+    // Convert empty strings to null for foreign keys
+    $boardId = !empty($data['board_id']) ? $data['board_id'] : null;
+    $studentId = !empty($data['student_id']) ? $data['student_id'] : null;
+    $teacherId = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
+
+    // Get max position for the board
+    if ($boardId !== null) {
+        $maxPosition = db()->fetchOne(
+            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id = ?",
+            [$boardId]
+        );
+    } else {
+        $maxPosition = db()->fetchOne(
+            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id IS NULL"
+        );
+    }
+    $position = ($maxPosition['max_pos'] ?? -1) + 1;
+
+    $sql = "INSERT INTO tasks (board_id, student_id, teacher_id, title, description, due_date, priority, status, position)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
     db()->query($sql, [
-        $data['student_id'] ?? null,
-        $data['teacher_id'] ?? null,
+        $boardId,
+        $studentId,
+        $teacherId,
         $data['title'],
         $data['description'] ?? null,
         $data['due_date'],
         $data['priority'] ?? 'medium',
-        $data['status'] ?? 'pending'
+        $data['status'] ?? 'pending',
+        $position
     ]);
-    
+
     $id = db()->lastInsertId();
-    
+
     jsonResponse(['success' => true, 'id' => $id, 'message' => 'Задача успешно создана'], 201);
 }
 
@@ -100,28 +175,33 @@ function updateTask($data) {
     if (!isset($data['id'])) {
         jsonResponse(['error' => 'ID не указан'], 400);
     }
-    
+
     $fields = [];
     $params = [];
-    
-    $allowedFields = ['student_id', 'teacher_id', 'title', 'description', 'due_date', 'priority', 'status'];
-    
+
+    $allowedFields = ['board_id', 'student_id', 'teacher_id', 'title', 'description', 'due_date', 'priority', 'status', 'position'];
+
     foreach ($allowedFields as $field) {
-        if (isset($data[$field])) {
+        if (array_key_exists($field, $data)) {
             $fields[] = "$field = ?";
-            $params[] = $data[$field];
+            // Convert empty strings to null for foreign key fields
+            if (in_array($field, ['board_id', 'student_id', 'teacher_id'])) {
+                $params[] = !empty($data[$field]) ? $data[$field] : null;
+            } else {
+                $params[] = $data[$field];
+            }
         }
     }
-    
+
     if (empty($fields)) {
         jsonResponse(['error' => 'Нет данных для обновления'], 400);
     }
-    
+
     $params[] = $data['id'];
     $sql = "UPDATE tasks SET " . implode(', ', $fields) . " WHERE id = ?";
-    
+
     db()->query($sql, $params);
-    
+
     jsonResponse(['success' => true, 'message' => 'Задача успешно обновлена']);
 }
 
