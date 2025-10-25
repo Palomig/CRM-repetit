@@ -31,7 +31,14 @@ try {
     }
 } catch (Exception $e) {
     error_log("API Error: " . $e->getMessage());
-    jsonResponse(['error' => 'Произошла ошибка: ' . $e->getMessage()], 500);
+    error_log("Stack trace: " . $e->getTraceAsString());
+
+    // Return more detailed error in development (remove in production)
+    jsonResponse([
+        'error' => 'Произошла ошибка: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], 500);
 }
 
 function getTasks() {
@@ -90,12 +97,22 @@ function createTask($data) {
         jsonResponse(['error' => 'Ошибка валидации', 'errors' => $errors], 400);
     }
 
+    // Convert empty strings to null for foreign keys
+    $boardId = !empty($data['board_id']) ? $data['board_id'] : null;
+    $studentId = !empty($data['student_id']) ? $data['student_id'] : null;
+    $teacherId = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
+
     // Get max position for the board
-    $boardId = $data['board_id'] ?? null;
-    $maxPosition = db()->fetchOne(
-        "SELECT MAX(position) as max_pos FROM tasks WHERE board_id = ?",
-        [$boardId]
-    );
+    if ($boardId !== null) {
+        $maxPosition = db()->fetchOne(
+            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id = ?",
+            [$boardId]
+        );
+    } else {
+        $maxPosition = db()->fetchOne(
+            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id IS NULL"
+        );
+    }
     $position = ($maxPosition['max_pos'] ?? -1) + 1;
 
     $sql = "INSERT INTO tasks (board_id, student_id, teacher_id, title, description, due_date, priority, status, position)
@@ -103,8 +120,8 @@ function createTask($data) {
 
     db()->query($sql, [
         $boardId,
-        $data['student_id'] ?? null,
-        $data['teacher_id'] ?? null,
+        $studentId,
+        $teacherId,
         $data['title'],
         $data['description'] ?? null,
         $data['due_date'],
@@ -129,9 +146,14 @@ function updateTask($data) {
     $allowedFields = ['board_id', 'student_id', 'teacher_id', 'title', 'description', 'due_date', 'priority', 'status', 'position'];
 
     foreach ($allowedFields as $field) {
-        if (isset($data[$field])) {
+        if (array_key_exists($field, $data)) {
             $fields[] = "$field = ?";
-            $params[] = $data[$field];
+            // Convert empty strings to null for foreign key fields
+            if (in_array($field, ['board_id', 'student_id', 'teacher_id'])) {
+                $params[] = !empty($data[$field]) ? $data[$field] : null;
+            } else {
+                $params[] = $data[$field];
+            }
         }
     }
 

@@ -591,6 +591,8 @@ function kanbanApp() {
 
         async saveTask() {
             try {
+                console.log('Saving task with data:', this.taskForm);
+
                 const method = this.taskModalMode === 'create' ? 'POST' : 'PUT';
                 const response = await fetch('/api/tasks.php', {
                     method: method,
@@ -598,18 +600,32 @@ function kanbanApp() {
                     body: JSON.stringify(this.taskForm)
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', e);
+                    console.error('Response text:', responseText);
+                    showNotification('Ошибка: сервер вернул некорректный ответ', 'error');
+                    return;
+                }
 
                 if (data.success) {
                     showNotification(data.message, 'success');
                     this.showTaskModal = false;
                     await this.loadTasks();
                 } else {
+                    console.error('Error from API:', data);
                     showNotification(data.error || 'Ошибка сохранения', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showNotification('Ошибка сохранения', 'error');
+                showNotification('Ошибка сохранения: ' + error.message, 'error');
             }
         },
 
