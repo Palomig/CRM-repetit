@@ -2,23 +2,49 @@
 // Start output buffering to prevent any stray output
 ob_start();
 
+// Log start
+file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Tasks API called - Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . " - Query: " . http_build_query($_GET ?? []) . "\n", FILE_APPEND);
+
 // API endpoint - set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
-require_once '../includes/api_config.php';
-require_once '../includes/db.php';
-require_once '../includes/functions.php';
+try {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading api_config...\n", FILE_APPEND);
+    require_once '../includes/api_config.php';
 
-// Clean any output from includes
-ob_clean();
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading db...\n", FILE_APPEND);
+    require_once '../includes/db.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading functions...\n", FILE_APPEND);
+    require_once '../includes/functions.php';
+
+    // Clean any output from includes
+    ob_clean();
+
+    $method = $_SERVER['REQUEST_METHOD'];
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Setup complete. Method: $method\n", FILE_APPEND);
+} catch (Throwable $e) {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] ERROR in setup: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    ob_clean();
+    echo json_encode([
+        'success' => false,
+        'error' => 'Setup error: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Entering switch for method: $method\n", FILE_APPEND);
+
     switch ($method) {
         case 'GET':
+            file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Calling getTasks()...\n", FILE_APPEND);
             getTasks();
+            file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] getTasks() completed\n", FILE_APPEND);
             break;
             
         case 'POST':
@@ -39,6 +65,9 @@ try {
 } catch (Exception $e) {
     error_log("API Error: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] EXCEPTION: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    file_put_contents(__DIR__ . '/../tasks_debug.log', $e->getTraceAsString() . "\n\n", FILE_APPEND);
 
     // Return more detailed error in development (remove in production)
     jsonResponse([
