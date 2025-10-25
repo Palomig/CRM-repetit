@@ -18,10 +18,14 @@ try {
     file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading functions...\n", FILE_APPEND);
     require_once '../includes/functions.php';
 
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] About to ob_clean()...\n", FILE_APPEND);
     // Clean any output from includes
     ob_clean();
 
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Getting REQUEST_METHOD...\n", FILE_APPEND);
     $method = $_SERVER['REQUEST_METHOD'];
+
+    file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Reading php://input...\n", FILE_APPEND);
     $input = json_decode(file_get_contents('php://input'), true);
 
     file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] Setup complete. Method: $method\n", FILE_APPEND);
