@@ -62,19 +62,23 @@ try {
         default:
             jsonResponse(['error' => 'Метод не поддерживается'], 405);
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("API Error: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
 
     file_put_contents(__DIR__ . '/../tasks_debug.log', "[" . date('Y-m-d H:i:s') . "] EXCEPTION: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
     file_put_contents(__DIR__ . '/../tasks_debug.log', $e->getTraceAsString() . "\n\n", FILE_APPEND);
 
+    ob_clean();
+
     // Return more detailed error in development (remove in production)
-    jsonResponse([
+    echo json_encode([
+        'success' => false,
         'error' => 'Произошла ошибка: ' . $e->getMessage(),
         'file' => $e->getFile(),
         'line' => $e->getLine()
-    ], 500);
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 function getTasks() {
