@@ -4,10 +4,11 @@
  * Handles CRUD operations for kanban boards
  */
 
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/db.php';
-
+// API endpoint - set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
+
+require_once __DIR__ . '/../includes/api_config.php';
+require_once __DIR__ . '/../includes/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $db = db();

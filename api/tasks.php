@@ -1,9 +1,10 @@
 <?php
-require_once '../includes/config.php';
+// API endpoint - set JSON header before any output
+header('Content-Type: application/json; charset=utf-8');
+
+require_once '../includes/api_config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
-
-header('Content-Type: application/json; charset=utf-8');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
