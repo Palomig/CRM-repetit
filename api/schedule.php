@@ -1,37 +1,51 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/db.php';
-require_once '../includes/functions.php';
+// Start output buffering to prevent any stray output
+ob_start();
 
+// Set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
-
 try {
+    require_once '../includes/api_config.php';
+    require_once '../includes/db.php';
+    require_once '../includes/functions.php';
+
+    // Clean any output from includes
+    ob_clean();
+
+    $method = $_SERVER['REQUEST_METHOD'];
+    $input = json_decode(file_get_contents('php://input'), true);
+
     switch ($method) {
         case 'GET':
             getLessons();
             break;
-            
+
         case 'POST':
             createLesson($input);
             break;
-            
+
         case 'PUT':
             updateLesson($input);
             break;
-            
+
         case 'DELETE':
             deleteLesson($input['id']);
             break;
-            
+
         default:
             jsonResponse(['error' => 'Метод не поддерживается'], 405);
     }
-} catch (Exception $e) {
-    error_log("API Error: " . $e->getMessage());
-    jsonResponse(['error' => 'Произошла ошибка: ' . $e->getMessage()], 500);
+} catch (Throwable $e) {
+    error_log("Schedule API Error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+
+    ob_clean();
+    jsonResponse([
+        'error' => 'Произошла ошибка: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ], 500);
 }
 
 function getLessons() {
