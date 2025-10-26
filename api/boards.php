@@ -7,30 +7,20 @@
 // Start output buffering to prevent any stray output
 ob_start();
 
-// Log start
-file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] API called\n", FILE_APPEND);
-
-// API endpoint - set JSON header before any output
+// Set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading config...\n", FILE_APPEND);
     require_once __DIR__ . '/../includes/api_config.php';
-
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] Loading db...\n", FILE_APPEND);
     require_once __DIR__ . '/../includes/db.php';
 
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] Cleaning buffer...\n", FILE_APPEND);
     // Clean any output from includes
     ob_clean();
 
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] Getting method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
     $method = $_SERVER['REQUEST_METHOD'];
     $db = db();
-
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] Entering switch for method: $method\n", FILE_APPEND);
 } catch (Throwable $e) {
-    file_put_contents(__DIR__ . '/../boards_debug.log', "[" . date('Y-m-d H:i:s') . "] ERROR in setup: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    error_log("Boards API Setup Error: " . $e->getMessage());
     ob_clean();
     echo json_encode([
         'success' => false,
@@ -173,10 +163,11 @@ try {
             echo json_encode(['success' => false, 'error' => 'Метод не поддерживается']);
             break;
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("Boards API Error: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
 
+    ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
