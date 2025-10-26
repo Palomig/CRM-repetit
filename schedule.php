@@ -209,16 +209,15 @@ $teacherColors = [
                             :class="getLesson(day.date, timeSlot) ? 'has-lesson' : 'empty'"
                             @click="openAddLessonModal(day.date, timeSlot)"
                         >
-                            <template x-if="getLesson(day.date, timeSlot)">
-                                <div
-                                    class="lesson-card"
-                                    :style="`border-color: ${getLesson(day.date, timeSlot).color}; background-color: ${getLesson(day.date, timeSlot).color}20`"
-                                    @click.stop="viewLesson(getLesson(day.date, timeSlot))"
-                                >
-                                    <div class="lesson-title" x-text="getLesson(day.date, timeSlot).title"></div>
-                                    <div class="lesson-students" x-html="formatStudents(getLesson(day.date, timeSlot).students)"></div>
-                                </div>
-                            </template>
+                            <div
+                                x-show="getLesson(day.date, timeSlot)"
+                                class="lesson-card"
+                                :style="getLesson(day.date, timeSlot) ? `border-color: ${getLesson(day.date, timeSlot).color}; background-color: ${getLesson(day.date, timeSlot).color}20` : ''"
+                                @click.stop="getLesson(day.date, timeSlot) && viewLesson(getLesson(day.date, timeSlot))"
+                            >
+                                <div class="lesson-title" x-text="getLesson(day.date, timeSlot)?.title"></div>
+                                <div class="lesson-students" x-html="getLesson(day.date, timeSlot) ? formatStudents(getLesson(day.date, timeSlot).students) : ''"></div>
+                            </div>
                         </div>
                     </template>
                 </template>
@@ -448,24 +447,14 @@ function scheduleApp() {
                 const response = await fetch(`/api/schedule.php?start=${startDate}&end=${endDate}`);
                 const data = await response.json();
 
-                console.log('API Response:', data);
-
                 if (data.success) {
                     // Добавляем цвет для каждого урока на основе преподавателя
                     this.lessons = data.data.map(lesson => {
                         const teacherIndex = this.teachers.findIndex(t => t.id == lesson.extendedProps.teacher_id);
                         lesson.color = this.getTeacherColor(teacherIndex);
                         lesson.students = lesson.extendedProps.students || [];
-                        console.log('Processed lesson:', {
-                            id: lesson.id,
-                            title: lesson.title,
-                            start: lesson.start,
-                            teacher: lesson.extendedProps.teacher_name,
-                            students: lesson.students
-                        });
                         return lesson;
                     });
-                    console.log('Total lessons loaded:', this.lessons.length);
                 }
             } catch (error) {
                 console.error('Error loading lessons:', error);
@@ -473,16 +462,11 @@ function scheduleApp() {
         },
 
         getLesson(date, time) {
-            const found = this.lessons.find(lesson => {
+            return this.lessons.find(lesson => {
                 const lessonDate = lesson.start.split(' ')[0];
                 const lessonTime = lesson.start.split(' ')[1].substring(0, 5);
-                const match = lessonDate === date && lessonTime === time;
-                if (this.lessons.length > 0 && date === this.weekDays[0]?.date && time === '16:00') {
-                    console.log('Searching lesson:', { date, time, lessonDate, lessonTime, match, lesson });
-                }
-                return match;
+                return lessonDate === date && lessonTime === time;
             });
-            return found;
         },
 
         formatStudents(students) {
