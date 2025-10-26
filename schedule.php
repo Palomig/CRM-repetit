@@ -2,36 +2,46 @@
 require_once 'includes/header.php';
 
 $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active' ORDER BY name");
-$rooms = db()->fetchAll("SELECT id, name FROM rooms WHERE status = 'active' ORDER BY name");
 $students = db()->fetchAll("SELECT id, name FROM students WHERE status = 'active' ORDER BY name");
 $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' ORDER BY name");
 
-// Определяем цвета для каждого кабинета
-$roomColors = [
-    1 => ['bg' => 'bg-blue-900/30', 'border' => 'border-blue-600/50', 'header' => 'bg-blue-800', 'text' => 'text-blue-200'],
-    2 => ['bg' => 'bg-purple-900/30', 'border' => 'border-purple-600/50', 'header' => 'bg-purple-800', 'text' => 'text-purple-200']
+// Цвета для преподавателей
+$teacherColors = [
+    '#3B82F6', // blue
+    '#8B5CF6', // purple
+    '#10B981', // green
+    '#F59E0B', // amber
+    '#EF4444', // red
+    '#EC4899', // pink
+    '#06B6D4', // cyan
+    '#6366F1', // indigo
 ];
 ?>
 
 <style>
+.schedule-container {
+    max-width: 100%;
+    width: 100%;
+}
+
 .schedule-grid {
     display: grid;
     grid-template-columns: 80px repeat(7, 1fr);
-    gap: 2px;
-    background: #1f2937;
+    gap: 1px;
+    background: #374151;
     overflow-x: auto;
 }
 
 .time-slot {
-    background: #374151;
-    padding: 0.5rem;
+    background: #1f2937;
+    padding: 0.75rem 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.875rem;
     font-weight: 600;
     color: #9ca3af;
-    border-right: 2px solid #1f2937;
+    border-right: 2px solid #374151;
 }
 
 .day-header {
@@ -43,21 +53,8 @@ $roomColors = [
     border-bottom: 2px solid #374151;
 }
 
-.day-column {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px;
-}
-
-.room-header {
-    padding: 0.5rem;
-    text-align: center;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
 .lesson-cell {
+    background: #111827;
     min-height: 80px;
     padding: 0.5rem;
     position: relative;
@@ -65,17 +62,29 @@ $roomColors = [
     transition: all 0.2s;
 }
 
+.lesson-cell.empty {
+    background: #064e3b;
+    opacity: 0.3;
+}
+
+.lesson-cell.empty:hover {
+    opacity: 0.6;
+}
+
+.lesson-cell.has-lesson {
+    opacity: 1;
+}
+
 .lesson-cell:hover {
-    opacity: 0.9;
     transform: scale(1.02);
+    z-index: 10;
 }
 
 .lesson-card {
-    background: rgba(255,255,255,0.05);
     border-radius: 0.375rem;
     padding: 0.5rem;
     height: 100%;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 2px solid;
 }
 
 .lesson-title {
@@ -87,13 +96,36 @@ $roomColors = [
 
 .lesson-students {
     font-size: 0.75rem;
-    color: #d1d5db;
-    line-height: 1.3;
+    color: #e5e7eb;
+    line-height: 1.4;
 }
 
-.empty-cell {
-    background: transparent;
-    min-height: 80px;
+.day-selector {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.day-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 2px solid #4b5563;
+    background: #374151;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.day-button:hover {
+    border-color: #6b7280;
+    background: #4b5563;
+}
+
+.day-button.selected {
+    border-color: #3b82f6;
+    background: #1e40af;
+    color: white;
 }
 
 @media (max-width: 1536px) {
@@ -106,13 +138,13 @@ $roomColors = [
 }
 </style>
 
-<div x-data="scheduleApp()">
+<div x-data="scheduleApp()" class="schedule-container">
     <!-- Заголовок и элементы управления -->
     <div class="mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-white">Расписание</h1>
-                <p class="text-gray-400 mt-1">Недельное расписание по кабинетам</p>
+                <p class="text-gray-400 mt-1">Недельное расписание занятий</p>
             </div>
 
             <div class="flex flex-wrap gap-3">
@@ -136,14 +168,14 @@ $roomColors = [
             </div>
         </div>
 
-        <!-- Легенда кабинетов -->
+        <!-- Легенда преподавателей -->
         <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 mb-4">
             <div class="flex flex-wrap gap-4 items-center">
-                <span class="text-sm font-medium text-gray-200">Кабинеты:</span>
-                <template x-for="room in rooms" :key="room.id">
+                <span class="text-sm font-medium text-gray-200">Преподаватели:</span>
+                <template x-for="(teacher, index) in teachers" :key="teacher.id">
                     <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded" :class="getRoomColor(room.id, 'header')"></div>
-                        <span class="text-sm text-gray-300" x-text="room.name"></span>
+                        <div class="w-4 h-4 rounded" :style="`background-color: ${getTeacherColor(index)}`"></div>
+                        <span class="text-sm text-gray-300" x-text="teacher.name"></span>
                     </div>
                 </template>
             </div>
@@ -154,45 +186,37 @@ $roomColors = [
     <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 overflow-x-auto">
         <div class="schedule-grid" style="min-width: 1200px;">
             <!-- Заголовок: пустая ячейка для времени -->
-            <div class="day-header"></div>
+            <div class="day-header">Время</div>
 
             <!-- Заголовки дней недели -->
             <template x-for="day in weekDays" :key="day.date">
                 <div class="day-header">
                     <div x-text="day.name" class="text-lg"></div>
-                    <div x-text="day.date" class="text-sm text-gray-400 mt-1"></div>
-
-                    <!-- Подзаголовки кабинетов -->
-                    <div class="day-column mt-2">
-                        <template x-for="room in rooms" :key="room.id">
-                            <div class="room-header" :class="getRoomColor(room.id, 'header')" x-text="room.name"></div>
-                        </template>
-                    </div>
+                    <div x-text="day.dateFormatted" class="text-sm text-gray-400 mt-1"></div>
                 </div>
             </template>
 
             <!-- Временные слоты и занятия -->
-            <template x-for="timeSlot in currentTimeSlots" :key="timeSlot">
+            <template x-for="timeSlot in getTimeSlotsForWeek()" :key="timeSlot">
                 <template>
                     <!-- Колонка времени -->
                     <div class="time-slot" x-text="timeSlot"></div>
 
                     <!-- Для каждого дня недели -->
                     <template x-for="day in weekDays" :key="day.date">
-                        <div class="day-column">
-                            <!-- Для каждого кабинета -->
-                            <template x-for="room in rooms" :key="room.id">
+                        <div
+                            class="lesson-cell"
+                            :class="getLesson(day.date, timeSlot) ? 'has-lesson' : 'empty'"
+                            @click="openAddLessonModal(day.date, timeSlot)"
+                        >
+                            <template x-if="getLesson(day.date, timeSlot)">
                                 <div
-                                    class="lesson-cell"
-                                    :class="[getRoomColor(room.id, 'bg'), getRoomColor(room.id, 'border'), 'border']"
-                                    @click="openAddLessonModal(day.date, timeSlot, room.id)"
+                                    class="lesson-card"
+                                    :style="`border-color: ${getLesson(day.date, timeSlot).color}; background-color: ${getLesson(day.date, timeSlot).color}20`"
+                                    @click.stop="viewLesson(getLesson(day.date, timeSlot))"
                                 >
-                                    <template x-if="getLesson(day.date, timeSlot, room.id)">
-                                        <div class="lesson-card" @click.stop="viewLesson(getLesson(day.date, timeSlot, room.id))">
-                                            <div class="lesson-title" x-text="getLesson(day.date, timeSlot, room.id).title"></div>
-                                            <div class="lesson-students" x-html="formatStudents(getLesson(day.date, timeSlot, room.id).students)"></div>
-                                        </div>
-                                    </template>
+                                    <div class="lesson-title" x-text="getLesson(day.date, timeSlot).title"></div>
+                                    <div class="lesson-students" x-html="formatStudents(getLesson(day.date, timeSlot).students)"></div>
                                 </div>
                             </template>
                         </div>
@@ -215,7 +239,7 @@ $roomColors = [
                 </div>
 
                 <form @submit.prevent="saveLesson" x-show="modalMode !== 'view'">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-200 mb-2">Тип урока</label>
                             <select x-model="form.lessonType" @change="handleLessonTypeChange()" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -255,18 +279,16 @@ $roomColors = [
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-200 mb-2">Кабинет *</label>
-                            <select x-model="form.room_id" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Выберите кабинет</option>
-                                <?php foreach ($rooms as $room): ?>
-                                    <option value="<?= $room['id'] ?>"><?= e($room['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-200 mb-2">Дата *</label>
-                            <input type="date" x-model="form.lesson_date" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Дни недели *</label>
+                            <div class="day-selector">
+                                <button type="button" @click="toggleDay(1)" :class="form.selectedDays.includes(1) ? 'selected' : ''" class="day-button">Пн</button>
+                                <button type="button" @click="toggleDay(2)" :class="form.selectedDays.includes(2) ? 'selected' : ''" class="day-button">Вт</button>
+                                <button type="button" @click="toggleDay(3)" :class="form.selectedDays.includes(3) ? 'selected' : ''" class="day-button">Ср</button>
+                                <button type="button" @click="toggleDay(4)" :class="form.selectedDays.includes(4) ? 'selected' : ''" class="day-button">Чт</button>
+                                <button type="button" @click="toggleDay(5)" :class="form.selectedDays.includes(5) ? 'selected' : ''" class="day-button">Пт</button>
+                                <button type="button" @click="toggleDay(6)" :class="form.selectedDays.includes(6) ? 'selected' : ''" class="day-button">Сб</button>
+                                <button type="button" @click="toggleDay(0)" :class="form.selectedDays.includes(0) ? 'selected' : ''" class="day-button">Вс</button>
+                            </div>
                         </div>
 
                         <div>
@@ -288,7 +310,7 @@ $roomColors = [
                             </select>
                         </div>
 
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-200 mb-2">Примечания</label>
                             <textarea x-model="form.notes" rows="2" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                         </div>
@@ -312,16 +334,16 @@ $roomColors = [
                             <p class="font-medium text-white" x-text="viewData.teacher_name"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-400">Кабинет</p>
-                            <p class="font-medium text-white" x-text="viewData.room_name"></p>
-                        </div>
-                        <div>
                             <p class="text-sm text-gray-400">Длительность</p>
                             <p class="font-medium text-white" x-text="viewData.duration + ' мин'"></p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-400">Статус</p>
                             <p class="font-medium text-white" x-text="getStatusText(viewData.status)"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400">Дата</p>
+                            <p class="font-medium text-white" x-text="viewData.lesson_date + ' ' + viewData.lesson_time"></p>
                         </div>
                     </div>
                     <div x-show="viewData.notes" class="border-t border-gray-700 pt-4">
@@ -351,15 +373,15 @@ function scheduleApp() {
         currentWeekLabel: '',
         weekDays: [],
         lessons: [],
-        rooms: <?= json_encode($rooms) ?>,
+        teachers: <?= json_encode($teachers) ?>,
+        teacherColors: <?= json_encode($teacherColors) ?>,
         form: {
             id: null,
             lessonType: 'individual',
             student_id: '',
             group_id: '',
             teacher_id: '',
-            room_id: '',
-            lesson_date: '',
+            selectedDays: [],
             lesson_time: '',
             duration: 60,
             status: 'scheduled',
@@ -376,21 +398,16 @@ function scheduleApp() {
             this.loadLessons();
         },
 
-        get currentTimeSlots() {
-            // Возвращаем все уникальные временные слоты для текущей недели
-            const allSlots = new Set();
-            this.weekDays.forEach(day => {
-                const dayOfWeek = new Date(day.date).getDay();
-                const slots = (dayOfWeek === 0 || dayOfWeek === 6) ? this.weekendSlots : this.weekdaySlots;
-                slots.forEach(slot => allSlots.add(slot));
-            });
+        getTimeSlotsForWeek() {
+            // Возвращаем все уникальные временные слоты
+            const allSlots = new Set([...this.weekdaySlots, ...this.weekendSlots]);
             return Array.from(allSlots).sort();
         },
 
         goToCurrentWeek() {
             const today = new Date();
             const dayOfWeek = today.getDay();
-            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Начинаем с понедельника
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
             this.currentWeekStart = new Date(today);
             this.currentWeekStart.setDate(today.getDate() + diff);
             this.updateWeekDays();
@@ -413,11 +430,11 @@ function scheduleApp() {
                 this.weekDays.push({
                     name: dayNames[date.getDay()],
                     date: date.toISOString().split('T')[0],
+                    dateFormatted: `${date.getDate()}.${date.getMonth() + 1}`,
                     fullDate: date
                 });
             }
 
-            // Обновляем метку текущей недели
             const startDate = this.weekDays[0].fullDate;
             const endDate = this.weekDays[6].fullDate;
             this.currentWeekLabel = `${startDate.getDate()}.${startDate.getMonth() + 1} - ${endDate.getDate()}.${endDate.getMonth() + 1}.${endDate.getFullYear()}`;
@@ -432,18 +449,23 @@ function scheduleApp() {
                 const data = await response.json();
 
                 if (data.success) {
-                    this.lessons = data.data;
+                    // Добавляем цвет для каждого урока на основе преподавателя
+                    this.lessons = data.data.map(lesson => {
+                        const teacherIndex = this.teachers.findIndex(t => t.id == lesson.extendedProps.teacher_id);
+                        lesson.color = this.getTeacherColor(teacherIndex);
+                        return lesson;
+                    });
                 }
             } catch (error) {
                 console.error('Error loading lessons:', error);
             }
         },
 
-        getLesson(date, time, roomId) {
+        getLesson(date, time) {
             return this.lessons.find(lesson => {
                 const lessonDate = lesson.start.split(' ')[0];
                 const lessonTime = lesson.start.split(' ')[1].substring(0, 5);
-                return lessonDate === date && lessonTime === time && lesson.extendedProps.room_id == roomId;
+                return lessonDate === date && lessonTime === time;
             });
         },
 
@@ -452,33 +474,25 @@ function scheduleApp() {
             return students.map(s => `• ${s}`).join('<br>');
         },
 
-        getRoomColor(roomId, type) {
-            const colors = {
-                1: {
-                    bg: 'bg-blue-900/30',
-                    border: 'border-blue-600/50',
-                    header: 'bg-blue-800',
-                    text: 'text-blue-200'
-                },
-                2: {
-                    bg: 'bg-purple-900/30',
-                    border: 'border-purple-600/50',
-                    header: 'bg-purple-800',
-                    text: 'text-purple-200'
-                }
-            };
-
-            // Если кабинетов больше 2, добавляем дополнительные цвета
-            const defaultColors = ['bg-green-900/30', 'bg-orange-900/30', 'bg-pink-900/30'];
-
-            return colors[roomId]?.[type] || colors[1][type];
+        getTeacherColor(index) {
+            if (index < 0) return this.teacherColors[0];
+            return this.teacherColors[index % this.teacherColors.length];
         },
 
-        openAddLessonModal(date, time, roomId) {
+        toggleDay(dayNumber) {
+            const index = this.form.selectedDays.indexOf(dayNumber);
+            if (index > -1) {
+                this.form.selectedDays.splice(index, 1);
+            } else {
+                this.form.selectedDays.push(dayNumber);
+            }
+        },
+
+        openAddLessonModal(date, time) {
             this.resetForm();
-            this.form.lesson_date = date;
+            const dayOfWeek = new Date(date).getDay();
+            this.form.selectedDays = [dayOfWeek];
             this.form.lesson_time = time;
-            this.form.room_id = roomId;
             this.modalMode = 'create';
             this.showModal = true;
         },
@@ -498,8 +512,7 @@ function scheduleApp() {
                 student_id: '',
                 group_id: '',
                 teacher_id: '',
-                room_id: '',
-                lesson_date: new Date().toISOString().split('T')[0],
+                selectedDays: [],
                 lesson_time: '10:00',
                 duration: 60,
                 status: 'scheduled',
@@ -512,14 +525,12 @@ function scheduleApp() {
                 id: lesson.id,
                 title: lesson.title,
                 teacher_name: lesson.extendedProps.teacher_name,
-                room_name: lesson.extendedProps.room_name,
                 status: lesson.extendedProps.status,
                 duration: lesson.extendedProps.duration,
                 notes: lesson.extendedProps.notes,
                 student_id: lesson.extendedProps.student_id,
                 group_id: lesson.extendedProps.group_id,
                 teacher_id: lesson.extendedProps.teacher_id,
-                room_id: lesson.extendedProps.room_id,
                 lesson_date: lesson.start.split(' ')[0],
                 lesson_time: lesson.start.split(' ')[1].substring(0, 5)
             };
@@ -528,14 +539,14 @@ function scheduleApp() {
         },
 
         editLesson(data) {
+            const dayOfWeek = new Date(data.lesson_date).getDay();
             this.form = {
                 id: data.id,
                 lessonType: data.student_id ? 'individual' : 'group',
                 student_id: data.student_id || '',
                 group_id: data.group_id || '',
                 teacher_id: data.teacher_id,
-                room_id: data.room_id,
-                lesson_date: data.lesson_date,
+                selectedDays: [dayOfWeek],
                 lesson_time: data.lesson_time,
                 duration: data.duration,
                 status: data.status,
@@ -546,21 +557,81 @@ function scheduleApp() {
 
         async saveLesson() {
             try {
-                const method = this.modalMode === 'create' ? 'POST' : 'PUT';
-                const response = await fetch('/api/schedule.php', {
-                    method: method,
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(this.form)
-                });
+                if (this.form.selectedDays.length === 0) {
+                    showNotification('Выберите хотя бы один день недели', 'error');
+                    return;
+                }
 
-                const data = await response.json();
+                // Если это редактирование, сохраняем как обычно
+                if (this.modalMode === 'edit') {
+                    // Находим дату урока на основе выбранного дня
+                    const selectedDay = this.form.selectedDays[0];
+                    const targetDate = this.weekDays.find(d => new Date(d.date).getDay() === selectedDay);
 
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    this.showModal = false;
-                    await this.loadLessons();
+                    const response = await fetch('/api/schedule.php', {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            id: this.form.id,
+                            student_id: this.form.student_id || null,
+                            group_id: this.form.group_id || null,
+                            teacher_id: this.form.teacher_id,
+                            lesson_date: targetDate.date,
+                            lesson_time: this.form.lesson_time,
+                            duration: this.form.duration,
+                            status: this.form.status,
+                            notes: this.form.notes
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        this.showModal = false;
+                        await this.loadLessons();
+                    } else {
+                        showNotification(data.error || 'Ошибка сохранения', 'error');
+                    }
                 } else {
-                    showNotification(data.error || 'Ошибка сохранения', 'error');
+                    // Создаём уроки для каждого выбранного дня
+                    const promises = [];
+
+                    for (const selectedDay of this.form.selectedDays) {
+                        const targetDate = this.weekDays.find(d => new Date(d.date).getDay() === selectedDay);
+                        if (!targetDate) continue;
+
+                        promises.push(
+                            fetch('/api/schedule.php', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    student_id: this.form.student_id || null,
+                                    group_id: this.form.group_id || null,
+                                    teacher_id: this.form.teacher_id,
+                                    room_id: 1, // Заглушка для обязательного поля
+                                    lesson_date: targetDate.date,
+                                    lesson_time: this.form.lesson_time,
+                                    duration: this.form.duration,
+                                    status: this.form.status,
+                                    notes: this.form.notes
+                                })
+                            })
+                        );
+                    }
+
+                    const results = await Promise.all(promises);
+                    const allSuccess = results.every(async r => {
+                        const data = await r.json();
+                        return data.success;
+                    });
+
+                    if (allSuccess) {
+                        showNotification(`Создано уроков: ${this.form.selectedDays.length}`, 'success');
+                        this.showModal = false;
+                        await this.loadLessons();
+                    } else {
+                        showNotification('Ошибка создания некоторых уроков', 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
