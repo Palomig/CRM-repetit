@@ -178,6 +178,10 @@ $teacherColors = [
                         <span class="text-sm text-gray-300" x-text="teacher.name"></span>
                     </div>
                 </template>
+                <div class="ml-auto px-3 py-1 bg-blue-600 rounded text-sm">
+                    <span class="text-white font-medium">Уроков загружено: </span>
+                    <span class="text-white font-bold" x-text="lessons.length"></span>
+                </div>
             </div>
         </div>
     </div>
@@ -482,11 +486,29 @@ function scheduleApp() {
         },
 
         getLesson(date, time) {
-            return this.lessons.find(lesson => {
-                const lessonDate = lesson.start.split(' ')[0];
-                const lessonTime = lesson.start.split(' ')[1].substring(0, 5);
+            const lesson = this.lessons.find(l => {
+                const lessonDate = l.start.split(' ')[0];
+                const lessonTime = l.start.split(' ')[1].substring(0, 5);
                 return lessonDate === date && lessonTime === time;
             });
+
+            // Debug first cell of first day
+            if (date === '2025-10-21' && time === '16:00') {
+                console.log('Looking for lesson at:', date, time);
+                console.log('Total lessons to search:', this.lessons.length);
+                console.log('Found lesson:', lesson);
+                if (lesson) {
+                    console.log('Lesson details:', {
+                        id: lesson.id,
+                        start: lesson.start,
+                        title: lesson.title,
+                        color: lesson.color,
+                        students: lesson.students
+                    });
+                }
+            }
+
+            return lesson;
         },
 
         formatStudents(students) {
