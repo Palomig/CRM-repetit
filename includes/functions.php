@@ -1,6 +1,8 @@
 <?php
-// Note: db.php should be loaded before this file
-// Functions assume database connection is available via db()
+// Load database if not already loaded
+if (!function_exists('db')) {
+    require_once __DIR__ . '/db.php';
+}
 
 // Функция для безопасного вывода данных
 function e($string) {
