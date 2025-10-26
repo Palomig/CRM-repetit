@@ -74,7 +74,19 @@ function getLessons() {
         $color = '#3B82F6'; // blue
         if ($lesson['status'] === 'completed') $color = '#10B981'; // green
         if ($lesson['status'] === 'cancelled') $color = '#EF4444'; // red
-        
+
+        // Получаем список студентов для групповых занятий
+        $students = [];
+        if ($lesson['group_id']) {
+            $students = db()->fetchAll(
+                "SELECT name FROM students WHERE group_id = ? AND status = 'active' ORDER BY name",
+                [$lesson['group_id']]
+            );
+            $students = array_column($students, 'name');
+        } elseif ($lesson['student_id']) {
+            $students = [$lesson['student_name']];
+        }
+
         $events[] = [
             'id' => $lesson['id'],
             'title' => $lesson['title'],
@@ -91,7 +103,8 @@ function getLessons() {
                 'room_name' => $lesson['room_name'],
                 'status' => $lesson['status'],
                 'duration' => $lesson['duration'],
-                'notes' => $lesson['notes']
+                'notes' => $lesson['notes'],
+                'students' => $students
             ]
         ];
     }
