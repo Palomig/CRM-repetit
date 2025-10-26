@@ -477,6 +477,12 @@ function scheduleApp() {
 
                     console.log('Total lessons loaded:', this.lessons.length);
                     console.log('Lessons array:', this.lessons);
+
+                    // Force Alpine to re-evaluate
+                    console.log('Forcing Alpine.js reactivity update...');
+                    this.$nextTick(() => {
+                        console.log('After nextTick - lessons count:', this.lessons.length);
+                    });
                 } else {
                     console.error('API returned success:false', data);
                 }
@@ -486,15 +492,25 @@ function scheduleApp() {
         },
 
         getLesson(date, time) {
+            // Add counter to track function calls
+            if (!this._getLessonCallCount) this._getLessonCallCount = 0;
+            this._getLessonCallCount++;
+
             const lesson = this.lessons.find(l => {
                 const lessonDate = l.start.split(' ')[0];
                 const lessonTime = l.start.split(' ')[1].substring(0, 5);
+
+                // Log all comparisons for debugging
+                if (this._getLessonCallCount <= 50) { // Only log first 50 calls to avoid spam
+                    console.log(`Call #${this._getLessonCallCount}: Comparing lesson ${l.id} (${lessonDate} ${lessonTime}) with cell (${date} ${time})`);
+                }
+
                 return lessonDate === date && lessonTime === time;
             });
 
-            // Debug first cell of first day
+            // Debug specific cell
             if (date === '2025-10-21' && time === '16:00') {
-                console.log('Looking for lesson at:', date, time);
+                console.log('=== SPECIAL DEBUG for 2025-10-21 16:00 ===');
                 console.log('Total lessons to search:', this.lessons.length);
                 console.log('Found lesson:', lesson);
                 if (lesson) {
