@@ -1,16 +1,12 @@
 <?php
-// Start output buffering to prevent any stray output
+// Tasks API without functions.php dependency
 ob_start();
-
-// Set JSON header before any output
 header('Content-Type: application/json; charset=utf-8');
 
 try {
     require_once '../includes/api_config.php';
     require_once '../includes/db.php';
-    require_once '../includes/functions.php';
 
-    // Clean any output from includes
     ob_clean();
 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -20,47 +16,46 @@ try {
         case 'GET':
             getTasks();
             break;
-
         case 'POST':
             createTask($input);
             break;
-
         case 'PUT':
             updateTask($input);
             break;
-
         case 'DELETE':
             deleteTask($input['id']);
             break;
-
         default:
-            jsonResponse(['error' => 'Метод не поддерживается'], 405);
+            sendJson(['error' => 'Метод не поддерживается'], 405);
     }
+
 } catch (Throwable $e) {
     error_log("Tasks API Error: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
-
     ob_clean();
-    jsonResponse([
+    sendJson([
         'error' => 'Произошла ошибка: ' . $e->getMessage(),
         'file' => $e->getFile(),
         'line' => $e->getLine()
     ], 500);
 }
 
+function sendJson($data, $code = 200) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code($code);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 function getTasks() {
     $status = $_GET['status'] ?? null;
     $boardId = $_GET['board_id'] ?? null;
 
-    $sql = "
-        SELECT
-            t.*,
-            s.name as student_name,
-            te.name as teacher_name
-        FROM tasks t
-        LEFT JOIN students s ON t.student_id = s.id
-        LEFT JOIN teachers te ON t.teacher_id = te.id
-    ";
+    $sql = "SELECT t.*, s.name as student_name, te.name as teacher_name
+            FROM tasks t
+            LEFT JOIN students s ON t.student_id = s.id
+            LEFT JOIN teachers te ON t.teacher_id = te.id";
 
     $params = [];
     $conditions = [];
@@ -79,48 +74,33 @@ function getTasks() {
         $sql .= " WHERE " . implode(' AND ', $conditions);
     }
 
-    $sql .= " ORDER BY
-        t.position ASC,
-        CASE
-            WHEN t.priority = 'high' THEN 1
-            WHEN t.priority = 'medium' THEN 2
-            WHEN t.priority = 'low' THEN 3
-        END,
-        t.due_date ASC
-    ";
+    $sql .= " ORDER BY t.position ASC, t.created_at DESC";
 
     $tasks = db()->fetchAll($sql, $params);
 
-    jsonResponse(['success' => true, 'data' => $tasks]);
+    sendJson(['success' => true, 'data' => $tasks]);
 }
 
 function createTask($data) {
-    $errors = validate($data, [
-        'title' => ['required'],
-        'due_date' => ['required']
-    ]);
-
-    if (!empty($errors)) {
-        jsonResponse(['error' => 'Ошибка валидации', 'errors' => $errors], 400);
+    // Validate
+    if (empty($data['title'])) {
+        sendJson(['error' => 'Название обязательно'], 400);
+    }
+    if (empty($data['due_date'])) {
+        sendJson(['error' => 'Дата обязательна'], 400);
     }
 
-    // Convert empty strings to null for foreign keys
     $boardId = !empty($data['board_id']) ? $data['board_id'] : null;
     $studentId = !empty($data['student_id']) ? $data['student_id'] : null;
     $teacherId = !empty($data['teacher_id']) ? $data['teacher_id'] : null;
 
-    // Get max position for the board
+    // Get max position
     if ($boardId !== null) {
-        $maxPosition = db()->fetchOne(
-            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id = ?",
-            [$boardId]
-        );
+        $maxPos = db()->fetchOne("SELECT MAX(position) as max_pos FROM tasks WHERE board_id = ?", [$boardId]);
     } else {
-        $maxPosition = db()->fetchOne(
-            "SELECT MAX(position) as max_pos FROM tasks WHERE board_id IS NULL"
-        );
+        $maxPos = db()->fetchOne("SELECT MAX(position) as max_pos FROM tasks WHERE board_id IS NULL");
     }
-    $position = ($maxPosition['max_pos'] ?? -1) + 1;
+    $position = ($maxPos['max_pos'] ?? -1) + 1;
 
     $sql = "INSERT INTO tasks (board_id, student_id, teacher_id, title, description, due_date, priority, status, position)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -138,13 +118,12 @@ function createTask($data) {
     ]);
 
     $id = db()->lastInsertId();
-
-    jsonResponse(['success' => true, 'id' => $id, 'message' => 'Задача успешно создана'], 201);
+    sendJson(['success' => true, 'id' => $id, 'message' => 'Задача создана'], 201);
 }
 
 function updateTask($data) {
     if (!isset($data['id'])) {
-        jsonResponse(['error' => 'ID не указан'], 400);
+        sendJson(['error' => 'ID не указан'], 400);
     }
 
     $fields = [];
@@ -155,7 +134,6 @@ function updateTask($data) {
     foreach ($allowedFields as $field) {
         if (array_key_exists($field, $data)) {
             $fields[] = "$field = ?";
-            // Convert empty strings to null for foreign key fields
             if (in_array($field, ['board_id', 'student_id', 'teacher_id'])) {
                 $params[] = !empty($data[$field]) ? $data[$field] : null;
             } else {
@@ -165,23 +143,21 @@ function updateTask($data) {
     }
 
     if (empty($fields)) {
-        jsonResponse(['error' => 'Нет данных для обновления'], 400);
+        sendJson(['error' => 'Нет данных для обновления'], 400);
     }
 
     $params[] = $data['id'];
     $sql = "UPDATE tasks SET " . implode(', ', $fields) . " WHERE id = ?";
 
     db()->query($sql, $params);
-
-    jsonResponse(['success' => true, 'message' => 'Задача успешно обновлена']);
+    sendJson(['success' => true, 'message' => 'Задача обновлена']);
 }
 
 function deleteTask($id) {
     if (!$id) {
-        jsonResponse(['error' => 'ID не указан'], 400);
+        sendJson(['error' => 'ID не указан'], 400);
     }
-    
+
     db()->query("DELETE FROM tasks WHERE id = ?", [$id]);
-    
-    jsonResponse(['success' => true, 'message' => 'Задача успешно удалена']);
+    sendJson(['success' => true, 'message' => 'Задача удалена']);
 }
