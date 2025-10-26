@@ -200,31 +200,35 @@ $teacherColors = [
                 </div>
             </template>
 
-            <!-- Временные слоты и занятия -->
-            <template x-for="timeSlot in getTimeSlotsForWeek()" :key="timeSlot">
-                <template>
-                    <!-- Колонка времени -->
-                    <div class="time-slot" x-text="timeSlot"></div>
+            <!-- Все ячейки таблицы (время + уроки) в правильном порядке для grid -->
+            <template x-for="cell in getScheduleCells()" :key="cell.type + '-' + cell.time + '-' + (cell.date || '')">
+                <div
+                    :class="{
+                        'time-slot': cell.type === 'time',
+                        'lesson-cell': cell.type === 'lesson',
+                        'has-lesson': cell.type === 'lesson' && getLesson(cell.date, cell.time),
+                        'empty': cell.type === 'lesson' && !getLesson(cell.date, cell.time)
+                    }"
+                    @click="cell.type === 'lesson' && openAddLessonModal(cell.date, cell.time)"
+                >
+                    <!-- Содержимое ячейки времени -->
+                    <template x-if="cell.type === 'time'">
+                        <span x-text="cell.time"></span>
+                    </template>
 
-                    <!-- Для каждого дня недели -->
-                    <template x-for="day in weekDays" :key="day.date">
+                    <!-- Содержимое ячейки урока -->
+                    <template x-if="cell.type === 'lesson'">
                         <div
-                            class="lesson-cell"
-                            :class="getLesson(day.date, timeSlot) ? 'has-lesson' : 'empty'"
-                            @click="openAddLessonModal(day.date, timeSlot)"
+                            x-show="getLesson(cell.date, cell.time)"
+                            class="lesson-card"
+                            :style="getLesson(cell.date, cell.time) ? `border-color: ${getLesson(cell.date, cell.time).color}; background-color: ${getLesson(cell.date, cell.time).color}20` : ''"
+                            @click.stop="getLesson(cell.date, cell.time) && viewLesson(getLesson(cell.date, cell.time))"
                         >
-                            <div
-                                x-show="getLesson(day.date, timeSlot)"
-                                class="lesson-card"
-                                :style="getLesson(day.date, timeSlot) ? `border-color: ${getLesson(day.date, timeSlot).color}; background-color: ${getLesson(day.date, timeSlot).color}20` : ''"
-                                @click.stop="getLesson(day.date, timeSlot) && viewLesson(getLesson(day.date, timeSlot))"
-                            >
-                                <div class="lesson-title" x-text="getLesson(day.date, timeSlot)?.title"></div>
-                                <div class="lesson-students" x-html="getLesson(day.date, timeSlot) ? formatStudents(getLesson(day.date, timeSlot).students) : ''"></div>
-                            </div>
+                            <div class="lesson-title" x-text="getLesson(cell.date, cell.time)?.title"></div>
+                            <div class="lesson-students" x-html="getLesson(cell.date, cell.time) ? formatStudents(getLesson(cell.date, cell.time).students) : ''"></div>
                         </div>
                     </template>
-                </template>
+                </div>
             </template>
         </div>
     </div>
@@ -405,6 +409,31 @@ function scheduleApp() {
             // Возвращаем все уникальные временные слоты
             const allSlots = new Set([...this.weekdaySlots, ...this.weekendSlots]);
             return Array.from(allSlots).sort();
+        },
+
+        // Генерируем плоский массив всех ячеек для grid в правильном порядке
+        getScheduleCells() {
+            const cells = [];
+            const timeSlots = this.getTimeSlotsForWeek();
+
+            timeSlots.forEach(timeSlot => {
+                // Сначала добавляем ячейку времени
+                cells.push({
+                    type: 'time',
+                    time: timeSlot
+                });
+
+                // Затем добавляем ячейки уроков для каждого дня
+                this.weekDays.forEach(day => {
+                    cells.push({
+                        type: 'lesson',
+                        date: day.date,
+                        time: timeSlot
+                    });
+                });
+            });
+
+            return cells;
         },
 
         goToCurrentWeek() {
