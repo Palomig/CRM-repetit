@@ -448,13 +448,24 @@ function scheduleApp() {
                 const response = await fetch(`/api/schedule.php?start=${startDate}&end=${endDate}`);
                 const data = await response.json();
 
+                console.log('API Response:', data);
+
                 if (data.success) {
                     // Добавляем цвет для каждого урока на основе преподавателя
                     this.lessons = data.data.map(lesson => {
                         const teacherIndex = this.teachers.findIndex(t => t.id == lesson.extendedProps.teacher_id);
                         lesson.color = this.getTeacherColor(teacherIndex);
+                        lesson.students = lesson.extendedProps.students || [];
+                        console.log('Processed lesson:', {
+                            id: lesson.id,
+                            title: lesson.title,
+                            start: lesson.start,
+                            teacher: lesson.extendedProps.teacher_name,
+                            students: lesson.students
+                        });
                         return lesson;
                     });
+                    console.log('Total lessons loaded:', this.lessons.length);
                 }
             } catch (error) {
                 console.error('Error loading lessons:', error);
@@ -462,11 +473,16 @@ function scheduleApp() {
         },
 
         getLesson(date, time) {
-            return this.lessons.find(lesson => {
+            const found = this.lessons.find(lesson => {
                 const lessonDate = lesson.start.split(' ')[0];
                 const lessonTime = lesson.start.split(' ')[1].substring(0, 5);
-                return lessonDate === date && lessonTime === time;
+                const match = lessonDate === date && lessonTime === time;
+                if (this.lessons.length > 0 && date === this.weekDays[0]?.date && time === '16:00') {
+                    console.log('Searching lesson:', { date, time, lessonDate, lessonTime, match, lesson });
+                }
+                return match;
             });
+            return found;
         },
 
         formatStudents(students) {
