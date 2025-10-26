@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/config.php';
+// Only load config if constants are not already defined (for API endpoints)
+if (!defined('DB_HOST')) {
+    require_once __DIR__ . '/config.php';
+}
 
 class Database {
     private static $instance = null;

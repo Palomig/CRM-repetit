@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/db.php';
+// Note: db.php should be loaded before this file
+// Functions assume database connection is available via db()
 
 // Функция для безопасного вывода данных
 function e($string) {
