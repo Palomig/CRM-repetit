@@ -5,41 +5,201 @@ $teachers = db()->fetchAll("SELECT id, name FROM teachers WHERE status = 'active
 $rooms = db()->fetchAll("SELECT id, name FROM rooms WHERE status = 'active' ORDER BY name");
 $students = db()->fetchAll("SELECT id, name FROM students WHERE status = 'active' ORDER BY name");
 $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' ORDER BY name");
+
+// Определяем цвета для каждого кабинета
+$roomColors = [
+    1 => ['bg' => 'bg-blue-900/30', 'border' => 'border-blue-600/50', 'header' => 'bg-blue-800', 'text' => 'text-blue-200'],
+    2 => ['bg' => 'bg-purple-900/30', 'border' => 'border-purple-600/50', 'header' => 'bg-purple-800', 'text' => 'text-purple-200']
+];
 ?>
 
+<style>
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 2px;
+    background: #1f2937;
+    overflow-x: auto;
+}
+
+.time-slot {
+    background: #374151;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #9ca3af;
+    border-right: 2px solid #1f2937;
+}
+
+.day-header {
+    background: #1f2937;
+    padding: 1rem;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    border-bottom: 2px solid #374151;
+}
+
+.day-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+}
+
+.room-header {
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.lesson-cell {
+    min-height: 80px;
+    padding: 0.5rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lesson-cell:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.lesson-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    height: 100%;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.lesson-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: white;
+}
+
+.lesson-students {
+    font-size: 0.75rem;
+    color: #d1d5db;
+    line-height: 1.3;
+}
+
+.empty-cell {
+    background: transparent;
+    min-height: 80px;
+}
+
+@media (max-width: 1536px) {
+    .lesson-title {
+        font-size: 0.75rem;
+    }
+    .lesson-students {
+        font-size: 0.7rem;
+    }
+}
+</style>
+
 <div x-data="scheduleApp()">
-    <!-- Заголовок и фильтры -->
+    <!-- Заголовок и элементы управления -->
     <div class="mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-white">Расписание</h1>
-                <p class="text-gray-400 mt-1">Календарь занятий</p>
+                <p class="text-gray-400 mt-1">Недельное расписание по кабинетам</p>
             </div>
-            <button @click="showModal = true; modalMode = 'create'; resetForm()" class="mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus mr-2"></i>Добавить урок
-            </button>
+
+            <div class="flex flex-wrap gap-3">
+                <!-- Навигация по неделям -->
+                <div class="flex items-center gap-2">
+                    <button @click="changeWeek(-1)" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="text-white font-medium px-4" x-text="currentWeekLabel"></span>
+                    <button @click="changeWeek(1)" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button @click="goToCurrentWeek()" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-calendar-day mr-1"></i>Сегодня
+                    </button>
+                </div>
+
+                <button @click="showModal = true; modalMode = 'create'; resetForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Добавить урок
+                </button>
+            </div>
         </div>
 
-        <!-- Фильтр по преподавателю -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4">
-            <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <label class="text-sm font-medium text-gray-200">Фильтр по преподавателю:</label>
-                <select x-model="filterTeacherId" @change="calendar.refetchEvents()" class="flex-1 sm:flex-initial px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="">Все преподаватели</option>
-                    <?php foreach ($teachers as $teacher): ?>
-                        <option value="<?= $teacher['id'] ?>"><?= e($teacher['name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button @click="filterTeacherId = ''; calendar.refetchEvents()" class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">
-                    <i class="fas fa-redo mr-2"></i>Сбросить
-                </button>
+        <!-- Легенда кабинетов -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 mb-4">
+            <div class="flex flex-wrap gap-4 items-center">
+                <span class="text-sm font-medium text-gray-200">Кабинеты:</span>
+                <template x-for="room in rooms" :key="room.id">
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded" :class="getRoomColor(room.id, 'header')"></div>
+                        <span class="text-sm text-gray-300" x-text="room.name"></span>
+                    </div>
+                </template>
             </div>
         </div>
     </div>
 
-    <!-- Календарь -->
-    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-6">
-        <div id="calendar"></div>
+    <!-- Расписание -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow p-4 overflow-x-auto">
+        <div class="schedule-grid" style="min-width: 1200px;">
+            <!-- Заголовок: пустая ячейка для времени -->
+            <div class="day-header"></div>
+
+            <!-- Заголовки дней недели -->
+            <template x-for="day in weekDays" :key="day.date">
+                <div class="day-header">
+                    <div x-text="day.name" class="text-lg"></div>
+                    <div x-text="day.date" class="text-sm text-gray-400 mt-1"></div>
+
+                    <!-- Подзаголовки кабинетов -->
+                    <div class="day-column mt-2">
+                        <template x-for="room in rooms" :key="room.id">
+                            <div class="room-header" :class="getRoomColor(room.id, 'header')" x-text="room.name"></div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Временные слоты и занятия -->
+            <template x-for="timeSlot in currentTimeSlots" :key="timeSlot">
+                <template>
+                    <!-- Колонка времени -->
+                    <div class="time-slot" x-text="timeSlot"></div>
+
+                    <!-- Для каждого дня недели -->
+                    <template x-for="day in weekDays" :key="day.date">
+                        <div class="day-column">
+                            <!-- Для каждого кабинета -->
+                            <template x-for="room in rooms" :key="room.id">
+                                <div
+                                    class="lesson-cell"
+                                    :class="[getRoomColor(room.id, 'bg'), getRoomColor(room.id, 'border'), 'border']"
+                                    @click="openAddLessonModal(day.date, timeSlot, room.id)"
+                                >
+                                    <template x-if="getLesson(day.date, timeSlot, room.id)">
+                                        <div class="lesson-card" @click.stop="viewLesson(getLesson(day.date, timeSlot, room.id))">
+                                            <div class="lesson-title" x-text="getLesson(day.date, timeSlot, room.id).title"></div>
+                                            <div class="lesson-students" x-html="formatStudents(getLesson(day.date, timeSlot, room.id).students)"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
     </div>
 
     <!-- Модальное окно урока -->
@@ -185,10 +345,13 @@ $groups = db()->fetchAll("SELECT id, name FROM `groups` WHERE status = 'active' 
 <script>
 function scheduleApp() {
     return {
-        calendar: null,
         showModal: false,
         modalMode: 'create',
-        filterTeacherId: '',
+        currentWeekStart: null,
+        currentWeekLabel: '',
+        weekDays: [],
+        lessons: [],
+        rooms: <?= json_encode($rooms) ?>,
         form: {
             id: null,
             lessonType: 'individual',
@@ -204,64 +367,120 @@ function scheduleApp() {
         },
         viewData: {},
 
+        // Временные слоты
+        weekdaySlots: ['16:00', '17:00', '18:00', '19:00', '20:00'],
+        weekendSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'],
+
         init() {
-            this.initCalendar();
+            this.goToCurrentWeek();
+            this.loadLessons();
         },
 
-        initCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            this.calendar = new FullCalendar.Calendar(calendarEl, {
-                locale: 'ru',
-                initialView: 'timeGridWeek',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                slotMinTime: '08:00:00',
-                slotMaxTime: '21:00:00',
-                allDaySlot: false,
-                height: 'auto',
-                events: (info, successCallback, failureCallback) => {
-                    this.loadEvents(info, successCallback, failureCallback);
-                },
-                eventClick: (info) => {
-                    this.viewLesson(info.event);
-                },
-                editable: true,
-                eventDrop: (info) => {
-                    this.handleEventDrop(info);
-                },
-                eventResize: (info) => {
-                    this.handleEventResize(info);
-                }
+        get currentTimeSlots() {
+            // Возвращаем все уникальные временные слоты для текущей недели
+            const allSlots = new Set();
+            this.weekDays.forEach(day => {
+                const dayOfWeek = new Date(day.date).getDay();
+                const slots = (dayOfWeek === 0 || dayOfWeek === 6) ? this.weekendSlots : this.weekdaySlots;
+                slots.forEach(slot => allSlots.add(slot));
             });
-            this.calendar.render();
+            return Array.from(allSlots).sort();
         },
 
-        async loadEvents(info, successCallback, failureCallback) {
-            try {
-                const params = new URLSearchParams({
-                    start: info.startStr.split('T')[0],
-                    end: info.endStr.split('T')[0]
+        goToCurrentWeek() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Начинаем с понедельника
+            this.currentWeekStart = new Date(today);
+            this.currentWeekStart.setDate(today.getDate() + diff);
+            this.updateWeekDays();
+        },
+
+        changeWeek(direction) {
+            this.currentWeekStart.setDate(this.currentWeekStart.getDate() + (direction * 7));
+            this.updateWeekDays();
+            this.loadLessons();
+        },
+
+        updateWeekDays() {
+            this.weekDays = [];
+            const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(this.currentWeekStart);
+                date.setDate(this.currentWeekStart.getDate() + i);
+
+                this.weekDays.push({
+                    name: dayNames[date.getDay()],
+                    date: date.toISOString().split('T')[0],
+                    fullDate: date
                 });
+            }
 
-                if (this.filterTeacherId) {
-                    params.append('teacher_id', this.filterTeacherId);
-                }
+            // Обновляем метку текущей недели
+            const startDate = this.weekDays[0].fullDate;
+            const endDate = this.weekDays[6].fullDate;
+            this.currentWeekLabel = `${startDate.getDate()}.${startDate.getMonth() + 1} - ${endDate.getDate()}.${endDate.getMonth() + 1}.${endDate.getFullYear()}`;
+        },
 
-                const response = await fetch(`/api/schedule.php?${params}`);
+        async loadLessons() {
+            try {
+                const startDate = this.weekDays[0].date;
+                const endDate = this.weekDays[6].date;
+
+                const response = await fetch(`/api/schedule.php?start=${startDate}&end=${endDate}`);
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    successCallback(data.data);
-                } else {
-                    failureCallback();
+                    this.lessons = data.data;
                 }
             } catch (error) {
-                console.error('Error loading events:', error);
-                failureCallback();
+                console.error('Error loading lessons:', error);
             }
+        },
+
+        getLesson(date, time, roomId) {
+            return this.lessons.find(lesson => {
+                const lessonDate = lesson.start.split(' ')[0];
+                const lessonTime = lesson.start.split(' ')[1].substring(0, 5);
+                return lessonDate === date && lessonTime === time && lesson.extendedProps.room_id == roomId;
+            });
+        },
+
+        formatStudents(students) {
+            if (!students || students.length === 0) return '';
+            return students.map(s => `• ${s}`).join('<br>');
+        },
+
+        getRoomColor(roomId, type) {
+            const colors = {
+                1: {
+                    bg: 'bg-blue-900/30',
+                    border: 'border-blue-600/50',
+                    header: 'bg-blue-800',
+                    text: 'text-blue-200'
+                },
+                2: {
+                    bg: 'bg-purple-900/30',
+                    border: 'border-purple-600/50',
+                    header: 'bg-purple-800',
+                    text: 'text-purple-200'
+                }
+            };
+
+            // Если кабинетов больше 2, добавляем дополнительные цвета
+            const defaultColors = ['bg-green-900/30', 'bg-orange-900/30', 'bg-pink-900/30'];
+
+            return colors[roomId]?.[type] || colors[1][type];
+        },
+
+        openAddLessonModal(date, time, roomId) {
+            this.resetForm();
+            this.form.lesson_date = date;
+            this.form.lesson_time = time;
+            this.form.room_id = roomId;
+            this.modalMode = 'create';
+            this.showModal = true;
         },
 
         handleLessonTypeChange() {
@@ -288,26 +507,27 @@ function scheduleApp() {
             };
         },
 
-        viewLesson(event) {
+        viewLesson(lesson) {
             this.viewData = {
-                id: event.id,
-                title: event.title,
-                teacher_name: event.extendedProps.teacher_name,
-                room_name: event.extendedProps.room_name,
-                status: event.extendedProps.status,
-                duration: event.extendedProps.duration,
-                notes: event.extendedProps.notes,
-                student_id: event.extendedProps.student_id,
-                group_id: event.extendedProps.group_id,
-                teacher_id: event.extendedProps.teacher_id,
-                room_id: event.extendedProps.room_id
+                id: lesson.id,
+                title: lesson.title,
+                teacher_name: lesson.extendedProps.teacher_name,
+                room_name: lesson.extendedProps.room_name,
+                status: lesson.extendedProps.status,
+                duration: lesson.extendedProps.duration,
+                notes: lesson.extendedProps.notes,
+                student_id: lesson.extendedProps.student_id,
+                group_id: lesson.extendedProps.group_id,
+                teacher_id: lesson.extendedProps.teacher_id,
+                room_id: lesson.extendedProps.room_id,
+                lesson_date: lesson.start.split(' ')[0],
+                lesson_time: lesson.start.split(' ')[1].substring(0, 5)
             };
             this.modalMode = 'view';
             this.showModal = true;
         },
 
         editLesson(data) {
-            const startDate = this.calendar.getEventById(data.id);
             this.form = {
                 id: data.id,
                 lessonType: data.student_id ? 'individual' : 'group',
@@ -315,8 +535,8 @@ function scheduleApp() {
                 group_id: data.group_id || '',
                 teacher_id: data.teacher_id,
                 room_id: data.room_id,
-                lesson_date: startDate ? startDate.start.toISOString().split('T')[0] : '',
-                lesson_time: startDate ? startDate.start.toTimeString().slice(0, 5) : '',
+                lesson_date: data.lesson_date,
+                lesson_time: data.lesson_time,
                 duration: data.duration,
                 status: data.status,
                 notes: data.notes || ''
@@ -334,11 +554,11 @@ function scheduleApp() {
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showNotification(data.message, 'success');
                     this.showModal = false;
-                    this.calendar.refetchEvents();
+                    await this.loadLessons();
                 } else {
                     showNotification(data.error || 'Ошибка сохранения', 'error');
                 }
@@ -359,75 +579,17 @@ function scheduleApp() {
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showNotification(data.message, 'success');
                     this.showModal = false;
-                    this.calendar.refetchEvents();
+                    await this.loadLessons();
                 } else {
                     showNotification(data.error || 'Ошибка удаления', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Ошибка удаления', 'error');
-            }
-        },
-
-        async handleEventDrop(info) {
-            const event = info.event;
-            const newDate = event.start.toISOString().split('T')[0];
-            const newTime = event.start.toTimeString().slice(0, 5);
-
-            try {
-                const response = await fetch('/api/schedule.php', {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        id: event.id,
-                        lesson_date: newDate,
-                        lesson_time: newTime
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (!data.success) {
-                    info.revert();
-                    showNotification('Ошибка перемещения', 'error');
-                } else {
-                    showNotification('Урок успешно перемещен', 'success');
-                }
-            } catch (error) {
-                info.revert();
-                showNotification('Ошибка перемещения', 'error');
-            }
-        },
-
-        async handleEventResize(info) {
-            const event = info.event;
-            const duration = Math.round((event.end - event.start) / 60000);
-
-            try {
-                const response = await fetch('/api/schedule.php', {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        id: event.id,
-                        duration: duration
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (!data.success) {
-                    info.revert();
-                    showNotification('Ошибка изменения длительности', 'error');
-                } else {
-                    showNotification('Длительность успешно изменена', 'success');
-                }
-            } catch (error) {
-                info.revert();
-                showNotification('Ошибка изменения длительности', 'error');
             }
         },
 
