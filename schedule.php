@@ -443,18 +443,38 @@ function scheduleApp() {
             try {
                 const startDate = this.weekDays[0].date;
                 const endDate = this.weekDays[6].date;
+                const url = `/api/schedule.php?start=${startDate}&end=${endDate}`;
 
-                const response = await fetch(`/api/schedule.php?start=${startDate}&end=${endDate}`);
+                console.log('Loading lessons from:', url);
+                console.log('Date range:', startDate, 'to', endDate);
+
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    console.error('HTTP Error:', response.status, response.statusText);
+                    return;
+                }
+
                 const data = await response.json();
+                console.log('API Response:', data);
 
                 if (data.success) {
+                    console.log('Raw lessons from API:', data.data.length, 'lessons');
+
                     // Добавляем цвет для каждого урока на основе преподавателя
                     this.lessons = data.data.map(lesson => {
                         const teacherIndex = this.teachers.findIndex(t => t.id == lesson.extendedProps.teacher_id);
                         lesson.color = this.getTeacherColor(teacherIndex);
                         lesson.students = lesson.extendedProps.students || [];
+                        console.log('Lesson:', lesson.id, lesson.start, lesson.title);
                         return lesson;
                     });
+
+                    console.log('Total lessons loaded:', this.lessons.length);
+                    console.log('Lessons array:', this.lessons);
+                } else {
+                    console.error('API returned success:false', data);
                 }
             } catch (error) {
                 console.error('Error loading lessons:', error);
