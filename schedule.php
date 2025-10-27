@@ -206,8 +206,8 @@ $teacherColors = [
                     :class="{
                         'time-slot': cell.type === 'time',
                         'lesson-cell': cell.type === 'lesson',
-                        'has-lesson': cell.type === 'lesson' && getLesson(cell.date, cell.time),
-                        'empty': cell.type === 'lesson' && !getLesson(cell.date, cell.time)
+                        'has-lesson': cell.type === 'lesson' && getLessons(cell.date, cell.time).length > 0,
+                        'empty': cell.type === 'lesson' && getLessons(cell.date, cell.time).length === 0
                     }"
                     @click="cell.type === 'lesson' && openAddLessonModal(cell.date, cell.time)"
                 >
@@ -216,16 +216,19 @@ $teacherColors = [
                         <span x-text="cell.time"></span>
                     </template>
 
-                    <!-- Содержимое ячейки урока -->
+                    <!-- Содержимое ячейки урока: отображаем ВСЕ уроки в данной ячейке -->
                     <template x-if="cell.type === 'lesson'">
-                        <div
-                            x-show="getLesson(cell.date, cell.time)"
-                            class="lesson-card"
-                            :style="getLesson(cell.date, cell.time) ? `border-color: ${getLesson(cell.date, cell.time).color}; background-color: ${getLesson(cell.date, cell.time).color}20` : ''"
-                            @click.stop="getLesson(cell.date, cell.time) && viewLesson(getLesson(cell.date, cell.time))"
-                        >
-                            <div class="lesson-title" x-text="getLesson(cell.date, cell.time)?.title"></div>
-                            <div class="lesson-students" x-html="getLesson(cell.date, cell.time) ? formatStudents(getLesson(cell.date, cell.time).students) : ''"></div>
+                        <div class="lesson-cards-container">
+                            <template x-for="lesson in getLessons(cell.date, cell.time)" :key="lesson.id">
+                                <div
+                                    class="lesson-card"
+                                    :style="`border-color: ${lesson.color}; background-color: ${lesson.color}20; margin-bottom: 4px;`"
+                                    @click.stop="viewLesson(lesson)"
+                                >
+                                    <div class="lesson-title" x-text="lesson.title"></div>
+                                    <div class="lesson-students" x-html="formatStudents(lesson.students)"></div>
+                                </div>
+                            </template>
                         </div>
                     </template>
                 </div>
@@ -520,40 +523,21 @@ function scheduleApp() {
             }
         },
 
-        getLesson(date, time) {
-            // Add counter to track function calls
-            if (!this._getLessonCallCount) this._getLessonCallCount = 0;
-            this._getLessonCallCount++;
-
-            const lesson = this.lessons.find(l => {
+        getLessons(date, time) {
+            // Возвращаем ВСЕ уроки для данной ячейки (может быть несколько в одно время)
+            const lessons = this.lessons.filter(l => {
                 const lessonDate = l.start.split(' ')[0];
                 const lessonTime = l.start.split(' ')[1].substring(0, 5);
-
-                // Log all comparisons for debugging
-                if (this._getLessonCallCount <= 50) { // Only log first 50 calls to avoid spam
-                    console.log(`Call #${this._getLessonCallCount}: Comparing lesson ${l.id} (${lessonDate} ${lessonTime}) with cell (${date} ${time})`);
-                }
-
                 return lessonDate === date && lessonTime === time;
             });
 
-            // Debug specific cell
-            if (date === '2025-10-21' && time === '16:00') {
-                console.log('=== SPECIAL DEBUG for 2025-10-21 16:00 ===');
-                console.log('Total lessons to search:', this.lessons.length);
-                console.log('Found lesson:', lesson);
-                if (lesson) {
-                    console.log('Lesson details:', {
-                        id: lesson.id,
-                        start: lesson.start,
-                        title: lesson.title,
-                        color: lesson.color,
-                        students: lesson.students
-                    });
-                }
-            }
+            return lessons;
+        },
 
-            return lesson;
+        // Оставляем старую функцию для обратной совместимости
+        getLesson(date, time) {
+            const lessons = this.getLessons(date, time);
+            return lessons.length > 0 ? lessons[0] : null;
         },
 
         formatStudents(students) {
