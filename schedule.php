@@ -60,6 +60,7 @@ $teacherColors = [
     position: relative;
     cursor: pointer;
     transition: all 0.2s;
+    border: 1px solid #374151;
 }
 
 .lesson-cell.empty {
@@ -206,10 +207,11 @@ $teacherColors = [
                     :class="{
                         'time-slot': cell.type === 'time',
                         'lesson-cell': cell.type === 'lesson',
-                        'has-lesson': cell.type === 'lesson' && getLessons(cell.date, cell.time).length > 0,
-                        'empty': cell.type === 'lesson' && getLessons(cell.date, cell.time).length === 0
+                        'has-lesson': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.date, cell.time).length > 0,
+                        'empty': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.date, cell.time).length === 0
                     }"
-                    @click="cell.type === 'lesson' && openAddLessonModal(cell.date, cell.time)"
+                    :style="cell.type === 'lesson' && cell.shouldShow === false ? 'display: none;' : ''"
+                    @click="cell.type === 'lesson' && cell.shouldShow !== false && openAddLessonModal(cell.date, cell.time)"
                 >
                     <!-- Содержимое ячейки времени -->
                     <template x-if="cell.type === 'time'">
@@ -217,7 +219,7 @@ $teacherColors = [
                     </template>
 
                     <!-- Содержимое ячейки урока: отображаем ВСЕ уроки в данной ячейке -->
-                    <template x-if="cell.type === 'lesson'">
+                    <template x-if="cell.type === 'lesson' && cell.shouldShow !== false">
                         <div class="lesson-cards-container">
                             <template x-for="lesson in getLessons(cell.date, cell.time)" :key="lesson.id">
                                 <div
@@ -400,8 +402,8 @@ function scheduleApp() {
         viewData: {},
 
         // Временные слоты
-        weekdaySlots: ['16:00', '17:00', '18:00', '19:00', '20:00'],
-        weekendSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'],
+        weekdaySlots: ['15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'], // Пн-Пт
+        weekendSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'], // Сб-Вс
 
         init() {
             this.goToCurrentWeek();
@@ -412,6 +414,18 @@ function scheduleApp() {
             // Возвращаем все уникальные временные слоты
             const allSlots = new Set([...this.weekdaySlots, ...this.weekendSlots]);
             return Array.from(allSlots).sort();
+        },
+
+        // Проверка, должен ли временной слот отображаться для данного дня
+        shouldShowTimeSlot(date, timeSlot) {
+            const dayOfWeek = new Date(date).getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Воскресенье (0) или Суббота (6)
+
+            if (isWeekend) {
+                return this.weekendSlots.includes(timeSlot);
+            } else {
+                return this.weekdaySlots.includes(timeSlot);
+            }
         },
 
         // Генерируем плоский массив всех ячеек для grid в правильном порядке
@@ -431,7 +445,8 @@ function scheduleApp() {
                     cells.push({
                         type: 'lesson',
                         date: day.date,
-                        time: timeSlot
+                        time: timeSlot,
+                        shouldShow: this.shouldShowTimeSlot(day.date, timeSlot)
                     });
                 });
             });
