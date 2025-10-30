@@ -148,21 +148,7 @@ $teacherColors = [
                 <p class="text-gray-400 mt-1">Недельное расписание занятий</p>
             </div>
 
-            <div class="flex flex-wrap gap-3">
-                <!-- Навигация по неделям -->
-                <div class="flex items-center gap-2">
-                    <button @click="changeWeek(-1)" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <span class="text-white font-medium px-4" x-text="currentWeekLabel"></span>
-                    <button @click="changeWeek(1)" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <button @click="goToCurrentWeek()" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
-                        <i class="fas fa-calendar-day mr-1"></i>Сегодня
-                    </button>
-                </div>
-
+            <div class="flex justify-end">
                 <button @click="showModal = true; modalMode = 'create'; resetForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fas fa-plus mr-2"></i>Добавить урок
                 </button>
@@ -194,24 +180,23 @@ $teacherColors = [
             <div class="day-header">Время</div>
 
             <!-- Заголовки дней недели -->
-            <template x-for="day in weekDays" :key="day.date">
+            <template x-for="day in weekDays" :key="day.dayNumber">
                 <div class="day-header">
                     <div x-text="day.name" class="text-lg"></div>
-                    <div x-text="day.dateFormatted" class="text-sm text-gray-400 mt-1"></div>
                 </div>
             </template>
 
             <!-- Все ячейки таблицы (время + уроки) в правильном порядке для grid -->
-            <template x-for="cell in getScheduleCells()" :key="cell.type + '-' + cell.time + '-' + (cell.date || '')">
+            <template x-for="cell in getScheduleCells()" :key="cell.type + '-' + cell.time + '-' + (cell.dayNumber || '')">
                 <div
                     :class="{
                         'time-slot': cell.type === 'time',
                         'lesson-cell': cell.type === 'lesson',
-                        'has-lesson': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.date, cell.time).length > 0,
-                        'empty': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.date, cell.time).length === 0
+                        'has-lesson': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.dayNumber, cell.time).length > 0,
+                        'empty': cell.type === 'lesson' && cell.shouldShow !== false && getLessons(cell.dayNumber, cell.time).length === 0
                     }"
                     :style="cell.type === 'lesson' && cell.shouldShow === false ? 'display: none;' : ''"
-                    @click="cell.type === 'lesson' && cell.shouldShow !== false && openAddLessonModal(cell.date, cell.time)"
+                    @click="cell.type === 'lesson' && cell.shouldShow !== false && openAddLessonModal(cell.dayNumber, cell.time)"
                 >
                     <!-- Содержимое ячейки времени -->
                     <template x-if="cell.type === 'time'">
@@ -221,7 +206,7 @@ $teacherColors = [
                     <!-- Содержимое ячейки урока: отображаем ВСЕ уроки в данной ячейке -->
                     <template x-if="cell.type === 'lesson' && cell.shouldShow !== false">
                         <div class="lesson-cards-container">
-                            <template x-for="lesson in getLessons(cell.date, cell.time)" :key="lesson.id">
+                            <template x-for="lesson in getLessons(cell.dayNumber, cell.time)" :key="lesson.id">
                                 <div
                                     class="lesson-card"
                                     :style="`border-color: ${lesson.color}; background-color: ${lesson.color}20; margin-bottom: 4px;`"
@@ -381,9 +366,16 @@ function scheduleApp() {
     return {
         showModal: false,
         modalMode: 'create',
-        currentWeekStart: null,
-        currentWeekLabel: '',
-        weekDays: [],
+        // Статичные дни недели (Пн-Вс)
+        weekDays: [
+            { dayNumber: 1, name: 'Пн' },
+            { dayNumber: 2, name: 'Вт' },
+            { dayNumber: 3, name: 'Ср' },
+            { dayNumber: 4, name: 'Чт' },
+            { dayNumber: 5, name: 'Пт' },
+            { dayNumber: 6, name: 'Сб' },
+            { dayNumber: 0, name: 'Вс' }
+        ],
         lessons: [],
         teachers: <?= json_encode($teachers) ?>,
         teacherColors: <?= json_encode($teacherColors) ?>,
@@ -406,7 +398,6 @@ function scheduleApp() {
         weekendSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'], // Сб-Вс
 
         init() {
-            this.goToCurrentWeek();
             this.loadLessons();
         },
 
@@ -417,9 +408,8 @@ function scheduleApp() {
         },
 
         // Проверка, должен ли временной слот отображаться для данного дня
-        shouldShowTimeSlot(date, timeSlot) {
-            const dayOfWeek = new Date(date).getDay();
-            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Воскресенье (0) или Суббота (6)
+        shouldShowTimeSlot(dayNumber, timeSlot) {
+            const isWeekend = dayNumber === 0 || dayNumber === 6; // Воскресенье (0) или Суббота (6)
 
             if (isWeekend) {
                 return this.weekendSlots.includes(timeSlot);
@@ -444,9 +434,9 @@ function scheduleApp() {
                 this.weekDays.forEach(day => {
                     cells.push({
                         type: 'lesson',
-                        date: day.date,
+                        dayNumber: day.dayNumber,
                         time: timeSlot,
-                        shouldShow: this.shouldShowTimeSlot(day.date, timeSlot)
+                        shouldShow: this.shouldShowTimeSlot(day.dayNumber, timeSlot)
                     });
                 });
             });
@@ -454,53 +444,16 @@ function scheduleApp() {
             return cells;
         },
 
-        goToCurrentWeek() {
-            const today = new Date();
-            const dayOfWeek = today.getDay();
-            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-            this.currentWeekStart = new Date(today);
-            this.currentWeekStart.setDate(today.getDate() + diff);
-            this.updateWeekDays();
-        },
-
-        changeWeek(direction) {
-            this.currentWeekStart.setDate(this.currentWeekStart.getDate() + (direction * 7));
-            this.updateWeekDays();
-            this.loadLessons();
-        },
-
-        updateWeekDays() {
-            this.weekDays = [];
-            const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(this.currentWeekStart);
-                date.setDate(this.currentWeekStart.getDate() + i);
-
-                this.weekDays.push({
-                    name: dayNames[date.getDay()],
-                    date: date.toISOString().split('T')[0],
-                    dateFormatted: `${date.getDate()}.${date.getMonth() + 1}`,
-                    fullDate: date
-                });
-            }
-
-            const startDate = this.weekDays[0].fullDate;
-            const endDate = this.weekDays[6].fullDate;
-            this.currentWeekLabel = `${startDate.getDate()}.${startDate.getMonth() + 1} - ${endDate.getDate()}.${endDate.getMonth() + 1}.${endDate.getFullYear()}`;
-        },
 
         async loadLessons() {
             try {
-                const startDate = this.weekDays[0].date;
-                const endDate = this.weekDays[6].date;
+                // Загружаем все уроки за год (независимо от недели)
+                const today = new Date();
+                const startDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]; // 1 января
+                const endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0]; // 31 декабря
                 const url = `/api/schedule.php?start=${startDate}&end=${endDate}`;
 
-                console.log('Loading lessons from:', url);
-                console.log('Date range:', startDate, 'to', endDate);
-
                 const response = await fetch(url);
-                console.log('Response status:', response.status);
 
                 if (!response.ok) {
                     console.error('HTTP Error:', response.status, response.statusText);
@@ -508,27 +461,16 @@ function scheduleApp() {
                 }
 
                 const data = await response.json();
-                console.log('API Response:', data);
 
                 if (data.success) {
-                    console.log('Raw lessons from API:', data.data.length, 'lessons');
-
-                    // Добавляем цвет для каждого урока на основе преподавателя
+                    // Добавляем цвет и день недели для каждого урока
                     this.lessons = data.data.map(lesson => {
                         const teacherIndex = this.teachers.findIndex(t => t.id == lesson.extendedProps.teacher_id);
                         lesson.color = this.getTeacherColor(teacherIndex);
                         lesson.students = lesson.extendedProps.students || [];
-                        console.log('Lesson:', lesson.id, lesson.start, lesson.title);
+                        // Добавляем день недели из даты урока
+                        lesson.dayOfWeek = new Date(lesson.start).getDay();
                         return lesson;
-                    });
-
-                    console.log('Total lessons loaded:', this.lessons.length);
-                    console.log('Lessons array:', this.lessons);
-
-                    // Force Alpine to re-evaluate
-                    console.log('Forcing Alpine.js reactivity update...');
-                    this.$nextTick(() => {
-                        console.log('After nextTick - lessons count:', this.lessons.length);
                     });
                 } else {
                     console.error('API returned success:false', data);
@@ -538,20 +480,19 @@ function scheduleApp() {
             }
         },
 
-        getLessons(date, time) {
-            // Возвращаем ВСЕ уроки для данной ячейки (может быть несколько в одно время)
+        getLessons(dayNumber, time) {
+            // Возвращаем ВСЕ уроки для данного дня недели и времени
             const lessons = this.lessons.filter(l => {
-                const lessonDate = l.start.split(' ')[0];
                 const lessonTime = l.start.split(' ')[1].substring(0, 5);
-                return lessonDate === date && lessonTime === time;
+                return l.dayOfWeek === dayNumber && lessonTime === time;
             });
 
             return lessons;
         },
 
         // Оставляем старую функцию для обратной совместимости
-        getLesson(date, time) {
-            const lessons = this.getLessons(date, time);
+        getLesson(dayNumber, time) {
+            const lessons = this.getLessons(dayNumber, time);
             return lessons.length > 0 ? lessons[0] : null;
         },
 
@@ -574,10 +515,9 @@ function scheduleApp() {
             }
         },
 
-        openAddLessonModal(date, time) {
+        openAddLessonModal(dayNumber, time) {
             this.resetForm();
-            const dayOfWeek = new Date(date).getDay();
-            this.form.selectedDays = [dayOfWeek];
+            this.form.selectedDays = [dayNumber];
             this.form.lesson_time = time;
             this.modalMode = 'create';
             this.showModal = true;
@@ -641,6 +581,23 @@ function scheduleApp() {
             this.modalMode = 'edit';
         },
 
+        // Вычисляет ближайшую дату для заданного дня недели
+        getNextDateForDay(dayNumber) {
+            const today = new Date();
+            const currentDay = today.getDay();
+            let daysUntilTarget = dayNumber - currentDay;
+
+            // Если день уже прошёл на этой неделе, берём следующую неделю
+            if (daysUntilTarget < 0) {
+                daysUntilTarget += 7;
+            }
+
+            const targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + daysUntilTarget);
+
+            return targetDate.toISOString().split('T')[0];
+        },
+
         async saveLesson() {
             try {
                 if (this.form.selectedDays.length === 0) {
@@ -652,7 +609,7 @@ function scheduleApp() {
                 if (this.modalMode === 'edit') {
                     // Находим дату урока на основе выбранного дня
                     const selectedDay = this.form.selectedDays[0];
-                    const targetDate = this.weekDays.find(d => new Date(d.date).getDay() === selectedDay);
+                    const targetDate = this.getNextDateForDay(selectedDay);
 
                     const response = await fetch('/api/schedule.php', {
                         method: 'PUT',
@@ -662,7 +619,7 @@ function scheduleApp() {
                             student_id: this.form.student_id || null,
                             group_id: this.form.group_id || null,
                             teacher_id: this.form.teacher_id,
-                            lesson_date: targetDate.date,
+                            lesson_date: targetDate,
                             lesson_time: this.form.lesson_time,
                             duration: this.form.duration,
                             status: this.form.status,
@@ -683,8 +640,7 @@ function scheduleApp() {
                     const promises = [];
 
                     for (const selectedDay of this.form.selectedDays) {
-                        const targetDate = this.weekDays.find(d => new Date(d.date).getDay() === selectedDay);
-                        if (!targetDate) continue;
+                        const targetDate = this.getNextDateForDay(selectedDay);
 
                         promises.push(
                             fetch('/api/schedule.php', {
@@ -695,7 +651,7 @@ function scheduleApp() {
                                     group_id: this.form.group_id || null,
                                     teacher_id: this.form.teacher_id,
                                     room_id: 1, // Заглушка для обязательного поля
-                                    lesson_date: targetDate.date,
+                                    lesson_date: targetDate,
                                     lesson_time: this.form.lesson_time,
                                     duration: this.form.duration,
                                     status: this.form.status,
