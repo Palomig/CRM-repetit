@@ -4,12 +4,16 @@ ob_start();
 header('Content-Type: application/json; charset=utf-8');
 
 try {
+    error_log("Tasks API: Starting request");
     require_once '../includes/api_config.php';
+    error_log("Tasks API: api_config loaded");
     require_once '../includes/db.php';
+    error_log("Tasks API: db.php loaded");
 
     ob_clean();
 
     $method = $_SERVER['REQUEST_METHOD'];
+    error_log("Tasks API: Method = " . $method);
     $input = json_decode(file_get_contents('php://input'), true);
 
     switch ($method) {
@@ -31,6 +35,7 @@ try {
 
 } catch (Throwable $e) {
     error_log("Tasks API Error: " . $e->getMessage());
+    error_log("Tasks API Stack: " . $e->getTraceAsString());
     ob_clean();
     sendJson([
         'error' => 'Произошла ошибка: ' . $e->getMessage(),
